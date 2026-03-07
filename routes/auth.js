@@ -2,6 +2,15 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 const router = express.Router();
 
@@ -110,13 +119,33 @@ router.post('/forgot-password', async (req, res) => {
         await user.save();
 
         // In production: send email. For now, return the reset link directly.
-        const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+        const resetUrl = `https://smartstudy-hub.vercel.app/reset-password/${resetToken}`;
 
-        res.json({
-            message: 'Password reset link generated successfully.',
-            resetUrl, // In production this would be emailed
-            note: 'Copy this link and open it in your browser to reset your password.'
-        });
+        try {
+            await transporter.sendMail({
+                from: `"StudyTrack" <${process.env.EMAIL_USER}>`,
+                to: user.email,
+                subject: 'Password Reset Request',
+                html: `
+                    <h2>Password Reset Request</h2>
+                    <p>You requested a password reset for your StudyTrack account.</p>
+                    <p>Please click the link below to set a new password. This link is valid for 1 hour.</p>
+                    <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:white;text-decoration:none;border-radius:5px;margin-top:10px;">Reset Password</a>
+                    <p style="margin-top:20px;font-size:12px;color:#666;">If you didn't request this, please ignore this email.</p>
+                `
+            });
+
+            res.json({
+                message: 'Password reset link sent to your email.'
+            });
+        } catch (emailErr) {
+            console.error('EMAIL SEND ERROR:', emailErr);
+            // Revert changes if email fails
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpiry = undefined;
+            await user.save({ validateBeforeSave: false });
+            return res.status(500).json({ message: 'Error sending email. Please try again later.' });
+        }
     } catch (err) {
         console.error('FORGOT PASSWORD ERROR:', err.message);
         res.status(500).json({ message: 'Server error.', error: err.message });

@@ -9,20 +9,15 @@ const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
-    const [resetUrl, setResetUrl] = useState('');
-    const [copied, setCopied] = useState(false);
+    const [successMsg, setSuccessMsg] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
             const res = await axios.post(`${baseURL}/auth/forgot-password`, { email });
-            if (res.data.resetUrl) {
-                setResetUrl(res.data.resetUrl);
-                toast.success('Reset link generated!');
-            } else {
-                toast.success(res.data.message);
-            }
+            setSuccessMsg(res.data.message || 'If your email is registered, a link has been sent.');
+            toast.success('Email sent successfully!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Something went wrong');
         } finally {
@@ -30,12 +25,7 @@ const ForgotPasswordPage = () => {
         }
     };
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(resetUrl);
-        setCopied(true);
-        toast.success('Link copied!');
-        setTimeout(() => setCopied(false), 2000);
-    };
+
 
     return (
         <div style={{
@@ -59,7 +49,7 @@ const ForgotPasswordPage = () => {
                     </p>
                 </div>
 
-                {!resetUrl ? (
+                {!successMsg ? (
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: 6, color: '#cbd5e1' }}>Email Address</label>
@@ -76,48 +66,23 @@ const ForgotPasswordPage = () => {
                         </div>
 
                         <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: 8, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                            {loading ? 'Generating link...' : 'Generate Reset Link'}
+                            {loading ? 'Sending email...' : 'Send Reset Link'}
                         </button>
                     </form>
                 ) : (
-                    /* Reset link display */
                     <div className="fade-in">
                         <div style={{
                             background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)',
-                            borderRadius: 10, padding: '1rem', marginBottom: '1rem'
+                            borderRadius: 10, padding: '1.5rem', marginBottom: '1rem', textAlign: 'center'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                <CheckCircle size={16} color="#10b981" />
-                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#10b981' }}>Reset link generated!</span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
+                                <CheckCircle size={24} color="#10b981" />
                             </div>
-                            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                                Copy the link below and open it in your browser to reset your password. Link expires in <strong style={{ color: '#f59e0b' }}>1 hour</strong>.
+                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#10b981', display: 'block', marginBottom: 8 }}>Email Sent!</span>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                {successMsg} Please check your inbox and spam folder.
                             </p>
-                            <div style={{
-                                background: 'rgba(15,15,26,0.8)', borderRadius: 8, padding: '0.6rem 0.75rem',
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-                                border: '1px solid rgba(99,102,241,0.15)', wordBreak: 'break-all'
-                            }}>
-                                <span style={{ fontSize: '0.72rem', color: '#818cf8', flex: 1 }}>{resetUrl}</span>
-                                <button onClick={handleCopy} style={{
-                                    background: copied ? 'rgba(16,185,129,0.2)' : 'rgba(99,102,241,0.2)',
-                                    border: 'none', borderRadius: 6, padding: '0.3rem 0.5rem',
-                                    cursor: 'pointer', color: copied ? '#10b981' : '#818cf8', flexShrink: 0,
-                                    display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', fontWeight: 600
-                                }}>
-                                    {copied ? <CheckCircle size={13} /> : <Copy size={13} />}
-                                    {copied ? 'Copied!' : 'Copy'}
-                                </button>
-                            </div>
                         </div>
-
-                        <button
-                            onClick={() => window.open(resetUrl, '_self')}
-                            className="btn-primary"
-                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                        >
-                            Open Reset Link →
-                        </button>
                     </div>
                 )}
 
