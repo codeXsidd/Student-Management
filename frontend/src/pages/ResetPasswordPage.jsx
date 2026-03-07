@@ -4,6 +4,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Lock, ShieldCheck, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const ResetPasswordPage = () => {
     const { token } = useParams();
     const navigate = useNavigate();
@@ -24,7 +26,7 @@ const ResetPasswordPage = () => {
 
         setLoading(true);
         try {
-            const res = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, { password });
+            const res = await axios.post(`${baseURL}/auth/reset-password/${token}`, { password });
             toast.success(res.data.message || 'Password reset successfully!');
             setSuccess(true);
             setTimeout(() => navigate('/login'), 2500);

@@ -4,6 +4,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { BookOpen, Mail, ArrowLeft, Copy, CheckCircle, KeyRound } from 'lucide-react';
 
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
@@ -14,7 +16,7 @@ const ForgotPasswordPage = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+            const res = await axios.post(`${baseURL}/auth/forgot-password`, { email });
             if (res.data.resetUrl) {
                 setResetUrl(res.data.resetUrl);
                 toast.success('Reset link generated!');
