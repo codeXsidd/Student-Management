@@ -119,7 +119,7 @@ router.post('/forgot-password', async (req, res) => {
         await user.save();
 
         // In production: send email. For now, return the reset link directly.
-        const resetUrl = `https://smartstudy-hub.vercel.app/reset-password/${resetToken}`;
+        const resetUrl = `https://studytrack-hub.vercel.app/reset-password/${resetToken}`;
 
         try {
             await transporter.sendMail({
