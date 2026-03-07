@@ -1,0 +1,402 @@
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import API, { getAttendanceSummary, getUpcoming } from '../services/api';
+import {
+    BookOpen, Calendar, CheckCircle, AlertTriangle, TrendingUp, Clock,
+    Award, Timer, GraduationCap, BookMarked, Code2, Users, ClipboardList,
+    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote
+} from 'lucide-react';
+
+// ---------- helpers ----------
+const getHour = () => new Date().getHours();
+const greeting = () => getHour() < 12 ? '🌅 Good Morning' : getHour() < 17 ? '☀️ Good Afternoon' : '🌙 Good Evening';
+const getDaysLeft = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
+const attColor = (p) => p >= 75 ? '#10b981' : p >= 50 ? '#f59e0b' : '#ef4444';
+
+const todayName = () => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
+const currentTimeMinutes = () => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); };
+const timeToMinutes = (t) => {
+    if (!t) return -1;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + (m || 0);
+};
+
+// ---------- sub-components ----------
+const QuickLink = ({ to, icon, label, color, count }) => (
+    <Link to={to} style={{ textDecoration: 'none' }}>
+        <div className="glass-card" style={{
+            padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
+            cursor: 'pointer', transition: 'all 0.2s', border: '1px solid rgba(99,102,241,0.08)', borderRadius: 12
+        }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = `${color}44`; e.currentTarget.style.background = `${color}08`; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.08)'; e.currentTarget.style.background = 'rgba(26, 26, 46, 0.8)'; }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {React.cloneElement(icon, { size: 18, color })}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontWeight: 700, fontSize: '0.82rem', color: '#e2e8f0' }}>{label}</p>
+                {count !== undefined && <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{count}</p>}
+            </div>
+            <ArrowRight size={13} color="#64748b" />
+        </div>
+    </Link>
+);
+
+const MiniStat = ({ label, value, color, icon }) => (
+    <div style={{ textAlign: 'center', padding: '0.75rem', background: 'rgba(15,15,26,0.5)', borderRadius: 10 }}>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color }}>{value}</div>
+        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2 }}>{label}</div>
+    </div>
+);
+
+// ---------- main ----------
+const DashboardPage = () => {
+    const { user } = useAuth();
+    const [summary, setSummary] = useState([]);
+    const [upcoming, setUpcoming] = useState([]);
+    const [timetableSlots, setTimetableSlots] = useState([]);
+    const [timetableConfig, setTimetableConfig] = useState(null);
+    const [journalEntries, setJournalEntries] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [now, setNow] = useState(new Date());
+
+    // Live clock
+    useEffect(() => {
+        const interval = setInterval(() => setNow(new Date()), 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const fetchAll = async () => {
+            try {
+                const [sumRes, upRes, ttRes, cfgRes, jRes] = await Promise.all([
+                    getAttendanceSummary(),
+                    getUpcoming(),
+                    API.get('/timetable'),
+                    API.get('/timetable-config'),
+                    API.get('/journal')
+                ]);
+                setSummary(sumRes.data);
+                setUpcoming(upRes.data);
+                setTimetableSlots(ttRes.data);
+                setTimetableConfig(cfgRes.data);
+                setJournalEntries(jRes.data);
+            } catch { }
+            setLoading(false);
+        };
+        fetchAll();
+    }, []);
+
+    // Today's classes from timetable
+    const today = todayName();
+    const nowMins = currentTimeMinutes();
+    const todaySlots = timetableSlots
+        .filter(s => s.day === today)
+        .map(s => {
+            const cfg = timetableConfig?.periods?.find(p => p.number === s.period);
+            return { ...s, startMins: timeToMinutes(cfg?.startTime), endMins: timeToMinutes(cfg?.endTime), label: cfg?.label || `P${s.period}`, startTime: cfg?.startTime || '', endTime: cfg?.endTime || '' };
+        })
+        .sort((a, b) => a.period - b.period);
+
+    const currentClass = todaySlots.find(s => s.startMins >= 0 && nowMins >= s.startMins && nowMins <= s.endMins);
+    const nextClass = todaySlots.find(s => s.startMins > nowMins);
+
+    // Stats
+    const avgAtt = summary.length ? Math.round(summary.reduce((a, s) => a + s.percentage, 0) / summary.length) : 0;
+    const lowAtt = summary.filter(s => s.percentage < 75).length;
+
+    // Journal streak
+    const sortedDates = journalEntries.map(e => e.date).sort((a, b) => b.localeCompare(a));
+    let streak = 0;
+    let cur = new Date().toISOString().split('T')[0];
+    for (const d of sortedDates) {
+        if (d === cur) { streak++; const dt = new Date(d); dt.setDate(dt.getDate() - 1); cur = dt.toISOString().split('T')[0]; } else break;
+    }
+
+    const urgentCount = upcoming.filter(a => getDaysLeft(a.deadline) <= 2).length;
+
+    return (
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.5rem 1.5rem' }}>
+
+            {/* ── HERO HEADER ── */}
+            <div style={{
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 50%, rgba(16,185,129,0.05) 100%)',
+                border: '1px solid rgba(99,102,241,0.2)', borderRadius: 16, padding: '1.5rem 2rem',
+                marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem'
+            }}>
+                <div>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
+                        {greeting()}, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span>
+                    </h1>
+                    <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
+                        {now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        {' · '}{now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                </div>
+                {/* NOW / NEXT class pill */}
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {currentClass ? (
+                        <div style={{ padding: '0.6rem 1rem', background: `${currentClass.color}22`, border: `1px solid ${currentClass.color}55`, borderRadius: 12 }}>
+                            <p style={{ fontSize: '0.65rem', fontWeight: 700, color: currentClass.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>📍 Now in Class</p>
+                            <p style={{ fontWeight: 800, fontSize: '0.9rem', color: '#e2e8f0' }}>{currentClass.subject}</p>
+                            <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{currentClass.label} · {currentClass.room || '—'}</p>
+                        </div>
+                    ) : nextClass ? (
+                        <div style={{ padding: '0.6rem 1rem', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 12 }}>
+                            <p style={{ fontSize: '0.65rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>⏭ Next Class</p>
+                            <p style={{ fontWeight: 800, fontSize: '0.9rem', color: '#e2e8f0' }}>{nextClass.subject}</p>
+                            <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{nextClass.label} · {nextClass.startTime || '—'}</p>
+                        </div>
+                    ) : (
+                        <div style={{ padding: '0.6rem 1rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12 }}>
+                            <p style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 600 }}>✅ No more classes today</p>
+                            <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>Enjoy your free time!</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ── KEY STATS ROW ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.85rem', marginBottom: '1.5rem' }}>
+                {[
+                    { label: 'Avg Attendance', value: `${avgAtt}%`, color: attColor(avgAtt), icon: <TrendingUp size={18} />, sub: avgAtt >= 75 ? '✅ Safe' : '⚠️ Low' },
+                    { label: 'Subjects', value: summary.length, color: '#6366f1', icon: <BookOpen size={18} />, sub: `${lowAtt} need attention` },
+                    { label: 'Deadlines This Week', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent` },
+                    { label: 'Study Streak', value: streak > 0 ? `🔥 ${streak}d` : '—', color: '#ef4444', icon: <Flame size={18} />, sub: streak > 0 ? 'Keep it up!' : 'Start journaling!' },
+                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!' }
+                ].map(s => (
+                    <div key={s.label} className="glass-card fade-in" style={{ padding: '1rem', borderLeft: `3px solid ${s.color}` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</p>
+                            <div style={{ color: s.color, opacity: 0.7 }}>{s.icon}</div>
+                        </div>
+                        <p style={{ fontSize: '1.6rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</p>
+                        <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>{s.sub}</p>
+                    </div>
+                ))}
+            </div>
+
+            <div className="dashboard-grid-hero" style={{ marginBottom: '1.25rem' }}>
+
+                {/* ── LEFT: Today's Timetable ── */}
+                <div className="glass-card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <Calendar size={16} color="#6366f1" /> Today's Schedule
+                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 400 }}>({today})</span>
+                        </h2>
+                        <Link to="/timetable" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>View Full →</Link>
+                    </div>
+
+                    {loading ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Loading...</p>
+                        : todaySlots.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                                <p style={{ fontSize: '1.8rem', marginBottom: 6 }}>🎉</p>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No classes today!</p>
+                                <Link to="/timetable" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Set up your timetable →</Link>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                {todaySlots.map(slot => {
+                                    const isCurrent = currentClass?._id === slot._id;
+                                    const isPast = slot.endMins >= 0 && nowMins > slot.endMins;
+                                    return (
+                                        <div key={slot._id} style={{
+                                            display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.8rem',
+                                            borderRadius: 10, transition: 'all 0.2s',
+                                            background: isCurrent ? `${slot.color}18` : isPast ? 'rgba(15,15,26,0.3)' : 'rgba(15,15,26,0.5)',
+                                            border: isCurrent ? `1.5px solid ${slot.color}55` : '1px solid rgba(99,102,241,0.07)',
+                                            opacity: isPast ? 0.5 : 1
+                                        }}>
+                                            <div style={{ width: 3, height: 36, borderRadius: 2, background: isCurrent ? slot.color : slot.color + '66', flexShrink: 0 }} />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <p style={{ fontWeight: 700, fontSize: '0.83rem', color: isCurrent ? slot.color : '#e2e8f0' }}>{slot.subject}</p>
+                                                    {isCurrent && <span style={{ fontSize: '0.58rem', fontWeight: 700, color: slot.color, padding: '0.1rem 0.4rem', background: `${slot.color}22`, borderRadius: 8 }}>LIVE</span>}
+                                                    {isPast && <span style={{ fontSize: '0.58rem', color: '#475569', padding: '0.1rem 0.4rem', background: 'rgba(71,85,105,0.2)', borderRadius: 8 }}>Done</span>}
+                                                </div>
+                                                <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                                                    {slot.label}{slot.startTime ? ` · ${slot.startTime}${slot.endTime ? `–${slot.endTime}` : ''}` : ''}{slot.room ? ` · 📍${slot.room}` : ''}
+                                                </p>
+                                            </div>
+                                            {slot.teacher && <p style={{ fontSize: '0.65rem', color: '#64748b', textAlign: 'right' }}>{slot.teacher}</p>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                </div>
+
+                {/* ── RIGHT: Deadlines ── */}
+                <div className="glass-card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <AlertTriangle size={16} color="#f59e0b" /> Upcoming Deadlines
+                        </h2>
+                        <Link to="/assignments" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>All →</Link>
+                    </div>
+                    {loading ? <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Loading...</p>
+                        : upcoming.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                                <p style={{ fontSize: '1.8rem', marginBottom: 6 }}>✅</p>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No deadlines this week!</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {upcoming.slice(0, 6).map(a => {
+                                    const days = getDaysLeft(a.deadline);
+                                    const urgColor = days <= 1 ? '#ef4444' : days <= 3 ? '#f59e0b' : '#6366f1';
+                                    return (
+                                        <div key={a._id} style={{
+                                            padding: '0.65rem 0.8rem', borderRadius: 10,
+                                            background: days <= 1 ? 'rgba(239,68,68,0.06)' : 'rgba(15,15,26,0.5)',
+                                            border: `1px solid ${urgColor}22`, display: 'flex', alignItems: 'center', gap: '0.75rem'
+                                        }}>
+                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: urgColor, flexShrink: 0 }} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <p style={{ fontWeight: 600, fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</p>
+                                                <p style={{ fontSize: '0.67rem', color: 'var(--text-muted)' }}>{a.subject?.name || 'General'}</p>
+                                            </div>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: urgColor, whiteSpace: 'nowrap', padding: '0.15rem 0.45rem', background: `${urgColor}18`, borderRadius: 8 }}>
+                                                {days <= 0 ? '🔴 Today' : `${days}d`}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                </div>
+            </div>
+
+            <div className="dashboard-grid" style={{ marginBottom: '1.25rem' }}>
+
+                {/* ── Attendance Overview ── */}
+                <div className="glass-card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <ClipboardList size={16} color="#10b981" /> Attendance
+                        </h2>
+                        <Link to="/attendance" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Mark →</Link>
+                    </div>
+                    {summary.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>No subjects yet.</p>
+                            <Link to="/subjects" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Add subjects →</Link>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                            {summary.slice(0, 5).map(s => (
+                                <div key={s.subject._id}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{s.subject.name}</span>
+                                        <span style={{ fontSize: '0.78rem', fontWeight: 800, color: attColor(s.percentage) }}>{s.percentage}%</span>
+                                    </div>
+                                    <div style={{ height: 6, background: 'rgba(99,102,241,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: `${s.percentage}%`, background: attColor(s.percentage), borderRadius: 3, transition: 'width 0.6s ease' }} />
+                                    </div>
+                                    {s.percentage < 75 && (
+                                        <p style={{ fontSize: '0.62rem', color: '#ef4444', marginTop: 2 }}>
+                                            ⚠ Need {Math.ceil((75 * s.total - 100 * s.attended) / 25)} more classes
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Quick Actions ── */}
+                <div className="glass-card" style={{ padding: '1.25rem' }}>
+                    <h2 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <Zap size={16} color="#f59e0b" /> Quick Actions
+                    </h2>
+                    <div className="dashboard-grid-quick">
+                        <QuickLink to="/planner" icon={<Target />} label="Plan My Day" color="#f59e0b" />
+                        <QuickLink to="/attendance" icon={<ClipboardList />} label="Mark Attendance" color="#10b981" />
+                        <QuickLink to="/assignments" icon={<CheckSquare />} label="Add Assignment" color="#6366f1" />
+                        <QuickLink to="/pomodoro" icon={<Timer />} label="Start Pomodoro" color="#8b5cf6" />
+                        <QuickLink to="/journal" icon={<BookMarked />} label="Log Study" color="#ef4444" />
+                        <QuickLink to="/portfolio" icon={<Code2 />} label="Add Project" color="#22d3ee" />
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Bottom: Recent Journal + Module Links ── */}
+            <div className="dashboard-grid">
+
+                {/* Recent Journal */}
+                <div className="glass-card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <BookMarked size={16} color="#818cf8" /> Recent Study Logs
+                        </h2>
+                        <Link to="/journal" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>View All →</Link>
+                    </div>
+                    {journalEntries.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                            <p style={{ fontSize: '1.5rem', marginBottom: 6 }}>📖</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>No study logs yet.</p>
+                            <Link to="/journal" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Start journaling →</Link>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {journalEntries.slice(0, 4).map(e => (
+                                <div key={e._id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.7rem', background: 'rgba(15,15,26,0.5)', borderRadius: 9 }}>
+                                    <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{e.mood}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <p style={{ fontSize: '0.78rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {e.subjects?.join(', ') || 'Study session'}
+                                        </p>
+                                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                                            {new Date(e.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {e.hoursStudied}h
+                                        </p>
+                                    </div>
+                                    <span style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 700 }}>{e.hoursStudied}h</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* All pages overview */}
+                <div className="glass-card" style={{ padding: '1.25rem' }}>
+                    <h2 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <Star size={16} color="#f59e0b" /> Workspace Modules
+                    </h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+                        {[
+                            { to: '/planner', icon: <Target size={13} />, label: 'Daily Planner', color: '#f59e0b' },
+                            { to: '/subjects', icon: <Users size={13} />, label: 'Subjects', color: '#6366f1' },
+                            { to: '/attendance', icon: <ClipboardList size={13} />, label: 'Attendance', color: '#10b981' },
+                            { to: '/assignments', icon: <CheckSquare size={13} />, label: 'Assignments', color: '#f59e0b' },
+                            { to: '/timetable', icon: <Calendar size={13} />, label: 'Timetable', color: '#8b5cf6' },
+                            { to: '/gpa', icon: <GraduationCap size={13} />, label: 'GPA / CGPA', color: '#22d3ee' },
+                            { to: '/certificates', icon: <Award size={13} />, label: 'Certificates', color: '#f97316' },
+                            { to: '/pomodoro', icon: <Timer size={13} />, label: 'Pomodoro', color: '#6366f1' },
+                            { to: '/journal', icon: <BookMarked size={13} />, label: 'Study Journal', color: '#ef4444' },
+                            { to: '/portfolio', icon: <Code2 size={13} />, label: 'Portfolio', color: '#10b981' },
+                            { to: '/notes', icon: <StickyNote size={13} />, label: 'Notes Wall', color: '#f472b6' },
+                        ].map(m => (
+                            <Link key={m.to} to={m.to} style={{
+                                display: 'flex', alignItems: 'center', gap: 7, padding: '0.45rem 0.65rem',
+                                borderRadius: 8, textDecoration: 'none', fontSize: '0.76rem', fontWeight: 600,
+                                color: '#94a3b8', border: '1px solid rgba(99,102,241,0.06)', background: 'rgba(15,15,26,0.4)',
+                                transition: 'all 0.15s'
+                            }}
+                                onMouseEnter={e => { e.currentTarget.style.color = m.color; e.currentTarget.style.background = `${m.color}12`; e.currentTarget.style.borderColor = `${m.color}33`; }}
+                                onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(15,15,26,0.4)'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.06)'; }}>
+                                {React.cloneElement(m.icon, { color: m.color })}
+                                {m.label}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
+};
+
+export default DashboardPage;
