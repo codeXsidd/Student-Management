@@ -434,39 +434,6 @@ const DashboardPage = () => {
                     )}
                 </div>
 
-                {/* All pages overview */}
-                <div className="glass-card" style={{ padding: '1.25rem' }}>
-                    <h2 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <Star size={16} color="#f59e0b" /> Workspace Modules
-                    </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
-                        {[
-                            { to: '/planner', icon: <Target size={13} />, label: 'Daily Planner', color: '#f59e0b' },
-                            { to: '/subjects', icon: <Users size={13} />, label: 'Subjects', color: '#6366f1' },
-                            { to: '/attendance', icon: <ClipboardList size={13} />, label: 'Attendance', color: '#10b981' },
-                            { to: '/assignments', icon: <CheckSquare size={13} />, label: 'Assignments', color: '#f59e0b' },
-                            { to: '/timetable', icon: <Calendar size={13} />, label: 'Timetable', color: '#8b5cf6' },
-                            { to: '/gpa', icon: <GraduationCap size={13} />, label: 'GPA / CGPA', color: '#22d3ee' },
-                            { to: '/certificates', icon: <Award size={13} />, label: 'Certificates', color: '#f97316' },
-                            { to: '/pomodoro', icon: <Timer size={13} />, label: 'Pomodoro', color: '#6366f1' },
-                            { to: '/journal', icon: <BookMarked size={13} />, label: 'Study Journal', color: '#ef4444' },
-                            { to: '/portfolio', icon: <Code2 size={13} />, label: 'Portfolio', color: '#10b981' },
-                            { to: '/notes', icon: <StickyNote size={13} />, label: 'Notes Wall', color: '#f472b6' },
-                        ].map(m => (
-                            <Link key={m.to} to={m.to} style={{
-                                display: 'flex', alignItems: 'center', gap: 7, padding: '0.45rem 0.65rem',
-                                borderRadius: 8, textDecoration: 'none', fontSize: '0.76rem', fontWeight: 600,
-                                color: '#94a3b8', border: '1px solid rgba(99,102,241,0.06)', background: 'rgba(15,15,26,0.4)',
-                                transition: 'all 0.15s'
-                            }}
-                                onMouseEnter={e => { e.currentTarget.style.color = m.color; e.currentTarget.style.background = `${m.color}12`; e.currentTarget.style.borderColor = `${m.color}33`; }}
-                                onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(15,15,26,0.4)'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.06)'; }}>
-                                {React.cloneElement(m.icon, { color: m.color })}
-                                {m.label}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
             </div>
 
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
