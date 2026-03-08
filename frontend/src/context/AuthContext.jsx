@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
         }
     }, [token]);
 
-    // Restore user on refresh
+    // Restore user on refresh and wake up backend
     useEffect(() => {
         const restoreUser = async () => {
             if (token) {
@@ -35,10 +35,28 @@ export const AuthProvider = ({ children }) => {
                     }
                     // For other errors (like 5xx or Network Errors on backend cold start), we keep the token so the user stays authenticated
                 }
+            } else {
+                // Wake up the backend on Render automatically if the user is unauthenticated
+                try {
+                    await axios.get(`${baseURL}/health`);
+                } catch (error) {
+                    console.log('Backend wake-up ping failed:', error.message);
+                }
             }
             setLoading(false);
         };
         restoreUser();
+
+        // Keep-alive ping for Render backend (14 minutes = 14 * 60 * 1000 ms)
+        const pingInterval = setInterval(async () => {
+            try {
+                await axios.get(`${baseURL}/health`);
+            } catch (err) {
+                console.log('Keep-alive ping failed');
+            }
+        }, 14 * 60 * 1000);
+
+        return () => clearInterval(pingInterval);
     }, []);
 
     const login = (userData, authToken) => {
