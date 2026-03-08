@@ -10,6 +10,7 @@ const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
+    const [fallbackLink, setFallbackLink] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -17,7 +18,9 @@ const ForgotPasswordPage = () => {
         try {
             const res = await axios.post(`${baseURL}/auth/forgot-password`, { email });
             setSuccessMsg(res.data.message || 'If your email is registered, a link has been sent.');
-            toast.success('Email sent successfully!');
+            if (res.data.fallbackLink) setFallbackLink(res.data.fallbackLink);
+            if (res.data.resetLink) setFallbackLink(res.data.resetLink);
+            toast.success('Generated successfully!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Something went wrong');
         } finally {
@@ -78,10 +81,16 @@ const ForgotPasswordPage = () => {
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
                                 <CheckCircle size={24} color="#10b981" />
                             </div>
-                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#10b981', display: 'block', marginBottom: 8 }}>Email Sent!</span>
+                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#10b981', display: 'block', marginBottom: 8 }}>Done!</span>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                {successMsg} Please check your inbox and spam folder.
+                                {successMsg}
                             </p>
+                            {fallbackLink && (
+                                <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(99,102,241,0.1)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.3)' }}>
+                                    <p style={{ fontSize: '0.8rem', color: '#e2e8f0', marginBottom: 8, fontWeight: 600 }}>Click here to reset securely:</p>
+                                    <a href={fallbackLink} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all', fontSize: '0.8rem', color: '#818cf8', fontWeight: 700 }}>{fallbackLink}</a>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

@@ -152,7 +152,17 @@ router.post('/forgot-password', async (req, res) => {
             });
         } catch (emailErr) {
             console.error('EMAIL SEND ERROR:', emailErr);
-            // Revert changes if email fails
+
+            // Graceful fallback for Free-tier hosting environments (e.g. Render) that block outbound SMTP
+            if (emailErr.code === 'ETIMEDOUT' || emailErr.message.includes('timeout')) {
+                console.warn("Outbound SMTP blocked by hosting provider. Returning fallback link to client.");
+                return res.json({
+                    message: "Free-tier hosting blocked the email. Use this secure fallback link:",
+                    fallbackLink: resetUrl
+                });
+            }
+
+            // Revert changes if email fails for other reasons
             user.resetPasswordToken = undefined;
             user.resetPasswordExpiry = undefined;
             await user.save({ validateBeforeSave: false });
