@@ -151,7 +151,7 @@ const Sidebar = () => {
                         white-space: nowrap;
                     }
                     .hide-mobile { display: none !important; }
-                    .sidebar-header, .sidebar-user, .sidebar-bottom { display: none !important; }
+                    .sidebar-header, .sidebar-user { display: none !important; }
                     
                     /* Flatten logic for links */
                     aside > div.hide-scrollbar {
@@ -163,6 +163,7 @@ const Sidebar = () => {
                         height: 100%;
                         justify-content: flex-start;
                         min-width: min-content;
+                        flex: none !important;
                     }
                     aside div.hide-scrollbar > div {
                         margin: 0 !important;
@@ -176,9 +177,21 @@ const Sidebar = () => {
                         flex-direction: row !important;
                         gap: 0.25rem !important;
                     }
-                    aside a {
+                    aside a, aside button {
                         padding: 0.6rem 0.8rem !important;
                         border-radius: 99px !important;
+                        height: max-content;
+                    }
+                    
+                    /* Render Bottom Actions Inline */
+                    .sidebar-bottom {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        padding: 0 0.5rem !important;
+                        border-top: none !important;
+                        align-items: center;
+                        gap: 0.25rem;
+                        height: 100%;
                     }
                 }
             `}</style>
