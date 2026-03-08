@@ -215,7 +215,7 @@ const GpaCalculatorPage = () => {
                                         }}>
                                             {/* Sem header */}
                                             <div
-                                                onClick={() => setActiveSem(semNum)}
+                                                onClick={() => setActiveSem(prev => prev === semNum ? null : semNum)}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                                     padding: '0.75rem 1rem', cursor: 'pointer',
@@ -239,13 +239,13 @@ const GpaCalculatorPage = () => {
                                             {isActive && (
                                                 <div className="fade-in" style={{ padding: '0 1rem 1rem' }}>
                                                     {/* Column headers */}
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) 70px 56px 28px', gap: '0.4rem', marginBottom: '0.4rem', marginTop: '0.5rem' }}>
-                                                        {['Subject', 'Grade', 'Cr.', ''].map(h => (
-                                                            <span key={h} style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{h}</span>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) 80px 60px 32px', gap: '0.5rem', marginBottom: '0.5rem', marginTop: '0.5rem', overflowX: 'auto' }}>
+                                                        {['Subject', 'Grade', 'Credits', ''].map(h => (
+                                                            <span key={h} style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</span>
                                                         ))}
                                                     </div>
                                                     {currentSem.subjects.map((sub, idx) => (
-                                                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) 70px 56px 28px', gap: '0.4rem', marginBottom: '0.35rem', alignItems: 'center' }}>
+                                                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) 80px 60px 32px', gap: '0.5rem', marginBottom: '0.4rem', alignItems: 'center' }}>
                                                             <input className="input" placeholder="Subject name" value={sub.name}
                                                                 onChange={e => updateSubject(idx, 'name', e.target.value)}
                                                                 style={{ padding: '0.4rem 0.6rem', fontSize: '0.78rem' }} />

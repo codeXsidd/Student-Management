@@ -200,10 +200,10 @@ const HabitBuilderPage = () => {
                                         {habit.goal && <p style={{ fontSize: '0.8rem', color: 'var(--text-soft)' }}>{habit.goal}</p>}
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                        <button onClick={() => openModal('edit', habit)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
+                                        <button type="button" onClick={() => openModal('edit', habit)} className="action-btn" style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 8, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                                             <Edit2 size={16} />
                                         </button>
-                                        <button onClick={() => handleDelete(habit._id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4 }}>
+                                        <button type="button" onClick={() => handleDelete(habit._id)} className="action-btn" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 8, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -252,7 +252,7 @@ const HabitBuilderPage = () => {
             {showModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(5,5,16,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
                     <div className="glass-card fade-up" style={{ width: '100%', maxWidth: 450, padding: '2rem', position: 'relative' }}>
-                        <button onClick={closeModal} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                        <button type="button" onClick={closeModal} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
                             <X size={20} />
                         </button>
 
