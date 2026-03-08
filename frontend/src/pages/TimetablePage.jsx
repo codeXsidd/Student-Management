@@ -238,14 +238,14 @@ const TimetablePage = () => {
 
                         {/* Per-period settings */}
                         <div style={{ marginBottom: '1rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr 1fr 1fr', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                            <div className="timetable-config-grid" style={{ marginBottom: '0.4rem' }}>
                                 {['#', 'Label', 'Start', 'End'].map(h => (
                                     <span key={h} style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{h}</span>
                                 ))}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: 300, overflowY: 'auto' }}>
                                 {draftConfig.periods.map((p, i) => (
-                                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '50px 1fr 1fr 1fr', gap: '0.4rem', alignItems: 'center' }}>
+                                    <div key={i} className="timetable-config-grid" style={{ alignItems: 'center' }}>
                                         <span style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700, textAlign: 'center' }}>P{p.number}</span>
                                         <input className="input" placeholder={`P${p.number}`} value={p.label}
                                             onChange={e => updateDraftPeriod(i, 'label', e.target.value)}

@@ -26,6 +26,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -33,6 +34,8 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
   /* Subtle animated background */
   background-image:
     radial-gradient(ellipse 80% 60% at 20% 0%, rgba(99, 102, 241, 0.07) 0%, transparent 60%),
@@ -444,6 +447,12 @@ textarea {
   gap: 0.85rem;
 }
 
+.timetable-config-grid {
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr 1fr;
+  gap: 0.4rem;
+}
+
 @media (max-width: 1050px) {
   .dashboard-grid-hero {
     grid-template-columns: 1fr;
@@ -475,5 +484,10 @@ textarea {
 @media (max-width: 500px) {
   .dashboard-grid-quick {
     grid-template-columns: 1fr;
+  }
+
+  .timetable-config-grid {
+    grid-template-columns: 35px 1fr 1fr 1fr;
+    gap: 0.3rem !important;
   }
 }
