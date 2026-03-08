@@ -5,8 +5,12 @@ const path = require('path');
 const dns = require('dns');
 require('dotenv').config();
 
-dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
-dns.setDefaultResultOrder('ipv4first');
+// Only override DNS in local development (fixes some ISPs blocking MongoDB Atlas)
+// Do NOT override in production as it may break cloud environments like Render
+if (process.env.NODE_ENV !== 'production') {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const app = express();
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'https://smartstudy-hub.vercel.app', 'https://studytrack-hub.vercel.app'];
@@ -29,7 +33,12 @@ app.use('/api/todos', require('./routes/todos'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
-mongoose.connect(process.env.MONGODB_URI)
+// Disable buffering to fail fast if DB is down, instead of hanging forever
+mongoose.set('bufferCommands', false);
+
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000 // Timeout early rather than hanging
+})
   .then(() => console.log('✅ MongoDB connected successfully'))
   .catch(err => console.error('❌ MongoDB error:', err.message));
 
