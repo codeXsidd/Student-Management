@@ -5,7 +5,7 @@ import API, { getAttendanceSummary, getUpcoming } from '../services/api';
 import {
     BookOpen, Calendar, CheckCircle, AlertTriangle, TrendingUp, Clock,
     Award, Timer, GraduationCap, BookMarked, Code2, Users, ClipboardList,
-    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote
+    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote, Check
 } from 'lucide-react';
 
 // ---------- helpers ----------
@@ -58,8 +58,11 @@ const DashboardPage = () => {
     const [timetableSlots, setTimetableSlots] = useState([]);
     const [timetableConfig, setTimetableConfig] = useState(null);
     const [journalEntries, setJournalEntries] = useState([]);
+    const [todos, setTodos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [now, setNow] = useState(new Date());
+
+    const priorityColor = (priority) => priority === 'High' ? '#ef4444' : priority === 'Medium' ? '#f59e0b' : '#10b981';
 
     // Live clock
     useEffect(() => {
@@ -70,23 +73,52 @@ const DashboardPage = () => {
     useEffect(() => {
         const fetchAll = async () => {
             try {
-                const [sumRes, upRes, ttRes, cfgRes, jRes] = await Promise.all([
+                const [sumRes, upRes, ttRes, cfgRes, jRes, todosRes] = await Promise.all([
                     getAttendanceSummary(),
                     getUpcoming(),
                     API.get('/timetable'),
                     API.get('/timetable-config'),
-                    API.get('/journal')
+                    API.get('/journal'),
+                    API.get('/todos')
                 ]);
                 setSummary(sumRes.data);
                 setUpcoming(upRes.data);
                 setTimetableSlots(ttRes.data);
                 setTimetableConfig(cfgRes.data);
                 setJournalEntries(jRes.data);
+
+                const todayRes = new Date();
+                let staleTaskIds = [];
+                const updatedTodos = todosRes.data.map(t => {
+                    if (t.dayPlan && !t.completed) {
+                        const planDate = t.dayPlanDate ? new Date(t.dayPlanDate) : new Date(t.createdAt);
+                        const isToday = planDate.getDate() === todayRes.getDate() &&
+                            planDate.getMonth() === todayRes.getMonth() &&
+                            planDate.getFullYear() === todayRes.getFullYear();
+                        if (!isToday) {
+                            staleTaskIds.push(t._id);
+                            return { ...t, dayPlan: false, dayPlanDate: null };
+                        }
+                    }
+                    return t;
+                });
+
+                setTodos(updatedTodos);
+                staleTaskIds.forEach(id => {
+                    API.put(`/todos/${id}`, { dayPlan: false, dayPlanDate: null }).catch(() => { });
+                });
             } catch { }
             setLoading(false);
         };
         fetchAll();
     }, []);
+
+    const toggleComplete = async (todo) => {
+        try {
+            const res = await API.put(`/todos/${todo._id}`, { completed: !todo.completed, dayPlan: false });
+            setTodos(todos.map(t => t._id === todo._id ? res.data : t));
+        } catch { }
+    };
 
     // Today's classes from timetable
     const today = todayName();
@@ -115,6 +147,7 @@ const DashboardPage = () => {
     }
 
     const urgentCount = upcoming.filter(a => getDaysLeft(a.deadline) <= 2).length;
+    const dashboardTodos = todos.filter(t => t.dayPlan && !t.completed);
 
     return (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.5rem 1.5rem' }}>
@@ -271,6 +304,52 @@ const DashboardPage = () => {
 
             <div className="dashboard-grid" style={{ marginBottom: '1.25rem' }}>
 
+                {/* ── Daily Planner Widget ── */}
+                <div className="glass-card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <Target size={16} color="#f59e0b" /> Today's Focus
+                        </h2>
+                        <Link to="/planner" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Plan Day →</Link>
+                    </div>
+                    {loading ? (
+                        <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Loading...</p>
+                    ) : dashboardTodos.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                            <p style={{ fontSize: '1.8rem', marginBottom: 6 }}>🎯</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No tasks planned for today.</p>
+                            <Link to="/planner" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Add tasks →</Link>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {dashboardTodos.slice(0, 5).map(todo => (
+                                <div key={todo._id} style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.8rem',
+                                    borderRadius: 10, background: 'rgba(15,15,26,0.5)', border: `1px solid ${priorityColor(todo.priority)}33`,
+                                    borderLeft: `3px solid ${priorityColor(todo.priority)}`, transition: 'all 0.2s'
+                                }}>
+                                    <button onClick={() => toggleComplete(todo)} title="Mark as Done" style={{
+                                        width: 22, height: 22, borderRadius: 6, flexShrink: 0, cursor: 'pointer',
+                                        border: `2px solid ${priorityColor(todo.priority)}`, background: 'transparent',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, transition: 'all 0.2s'
+                                    }}>
+                                        <Check size={14} color={priorityColor(todo.priority)} style={{ opacity: 0, transition: 'opacity 0.2s' }}
+                                            onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.parentNode.style.background = `${priorityColor(todo.priority)}22`; }}
+                                            onMouseLeave={e => { e.currentTarget.style.opacity = 0; e.currentTarget.parentNode.style.background = 'transparent'; }}
+                                        />
+                                    </button>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <p style={{ fontWeight: 600, fontSize: '0.82rem', color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{todo.title}</p>
+                                    </div>
+                                    <span style={{ fontSize: '0.65rem', color: priorityColor(todo.priority), background: `${priorityColor(todo.priority)}15`, padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>
+                                        {todo.priority}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 {/* ── Attendance Overview ── */}
                 <div className="glass-card" style={{ padding: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -320,10 +399,6 @@ const DashboardPage = () => {
                         <QuickLink to="/portfolio" icon={<Code2 />} label="Add Project" color="#22d3ee" />
                     </div>
                 </div>
-            </div>
-
-            {/* ── Bottom: Recent Journal + Module Links ── */}
-            <div className="dashboard-grid">
 
                 {/* Recent Journal */}
                 <div className="glass-card" style={{ padding: '1.25rem' }}>
