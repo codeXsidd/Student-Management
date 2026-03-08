@@ -132,7 +132,7 @@ const DailyPlannerPage = () => {
     };
 
     return (
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.5rem 1.5rem' }}>
 
             {/* ── HEADER ── */}
             <div style={{ marginBottom: '2rem' }}>

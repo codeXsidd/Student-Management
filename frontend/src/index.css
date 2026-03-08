@@ -443,7 +443,7 @@ textarea {
   gap: 0.85rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1050px) {
   .dashboard-grid-hero {
     grid-template-columns: 1fr;
   }
