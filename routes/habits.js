@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 // @access  Private
 router.get('/', auth, async (req, res) => {
     try {
-        const habits = await Habit.find({ user: req.user.id }).sort({ createdAt: -1 });
+        const habits = await Habit.find({ user: req.userId }).sort({ createdAt: -1 });
         res.json(habits);
     } catch (err) {
         console.error(err.message);
@@ -29,7 +29,7 @@ router.post('/', auth, async (req, res) => {
         }
 
         const newHabit = new Habit({
-            user: req.user.id,
+            user: req.userId,
             name,
             goal,
             frequency: frequency || 'daily'
@@ -61,7 +61,7 @@ router.put('/:id', auth, async (req, res) => {
         if (!habit) return res.status(404).json({ msg: 'Habit not found' });
 
         // Make sure user owns habit
-        if (habit.user.toString() !== req.user.id) {
+        if (habit.user.toString() !== req.userId) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -93,7 +93,7 @@ router.delete('/:id', auth, async (req, res) => {
         }
 
         // Make sure user owns habit
-        if (habit.user.toString() !== req.user.id) {
+        if (habit.user.toString() !== req.userId) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -122,7 +122,7 @@ router.post('/:id/toggle', auth, async (req, res) => {
 
         if (!habit) return res.status(404).json({ msg: 'Habit not found' });
 
-        if (habit.user.toString() !== req.user.id) {
+        if (habit.user.toString() !== req.userId) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
