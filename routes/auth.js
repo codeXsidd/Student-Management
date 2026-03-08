@@ -113,38 +113,49 @@ router.post('/forgot-password', async (req, res) => {
         const resetUrl = `https://studytrack-hub.vercel.app/reset-password/${resetToken}`;
 
         try {
-            if (!process.env.WEB3FORMS_ACCESS_KEY) {
-                console.warn("WEB3FORMS_ACCESS_KEY missing in .env. Reset link generated but not sent via email.");
+            if (!process.env.BREVO_API_KEY) {
+                console.warn("BREVO_API_KEY missing in .env. Reset link generated but not sent via email.");
                 return res.json({
                     message: "Email configuration is missing on the server. Please check environment variables.",
                     resetLink: resetUrl // Expose it here so it doesn't just hang in production without env vars
                 });
             }
 
-            // Web3Forms API Call
-            const web3FormsResponse = await fetch("https://api.web3forms.com/submit", {
+            // Brevo (Sendinblue) API Call - Sends to the actual user via HTTPS (Bypasses Render SMTP block)
+            const brevoResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
                 method: "POST",
                 headers: {
+                    "Accept": "application/json",
                     "Content-Type": "application/json",
-                    Accept: "application/json"
+                    "api-key": process.env.BREVO_API_KEY
                 },
                 body: JSON.stringify({
-                    access_key: process.env.WEB3FORMS_ACCESS_KEY,
-                    subject: `StudyTrack Password Reset for ${user.email}`,
-                    from_name: "StudyTrack System",
-                    email: user.email, // This sets the reply-to to the user's email
-                    message: `A password reset was requested for: ${user.email}. \n\nPlease use the following secure link to reset the password (valid for 1 hour): \n${resetUrl}`
+                    sender: {
+                        name: "StudyTrack Support",
+                        email: "siddharthdeveloper2006@gmail.com" // Your verified sender email
+                    },
+                    to: [
+                        { email: user.email } // The student who requested the reset
+                    ],
+                    subject: "Password Reset Request - StudyTrack",
+                    htmlContent: `
+                        <h2>Password Reset Request</h2>
+                        <p>You requested a password reset for your StudyTrack account.</p>
+                        <p>Please click the link below to set a new password. This link is valid for 1 hour.</p>
+                        <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:white;text-decoration:none;border-radius:5px;margin-top:10px;">Reset Password</a>
+                        <p style="margin-top:20px;font-size:12px;color:#666;">If you didn't request this, please ignore this email.</p>
+                    `
                 })
             });
 
-            const web3Data = await web3FormsResponse.json();
+            const brevoData = await brevoResponse.json();
 
-            if (!web3Data.success) {
-                throw new Error(web3Data.message || "Web3Forms API failed to send the email.");
+            if (!brevoResponse.ok) {
+                throw new Error(brevoData.message || "Brevo API failed to send the email.");
             }
 
             res.json({
-                message: 'Password reset link sent securely via Web3Forms.'
+                message: 'Password reset link sent securely to your email address.'
             });
         } catch (emailErr) {
             console.error('EMAIL SEND ERROR:', emailErr);
