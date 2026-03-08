@@ -156,7 +156,11 @@ router.post('/forgot-password', async (req, res) => {
             user.resetPasswordToken = undefined;
             user.resetPasswordExpiry = undefined;
             await user.save({ validateBeforeSave: false });
-            return res.status(500).json({ message: 'Error sending email. Please try again or check server configuration.' });
+            return res.status(500).json({
+                message: 'Error sending email. Please try again or check server configuration.',
+                errorDetails: emailErr.message,
+                errorCode: emailErr.code
+            });
         }
     } catch (err) {
         console.error('FORGOT PASSWORD ERROR:', err.message);
