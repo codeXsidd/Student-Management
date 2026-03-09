@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import API, { getUpcoming, getHabits, toggleHabit } from '../services/api';
+import API, { getUpcoming, getHabits, toggleHabit, aiChat } from '../services/api';
 import {
     BookOpen, Calendar, CheckCircle, AlertTriangle, TrendingUp, Clock,
     Award, Timer, GraduationCap, BookMarked, Code2, Users, ClipboardList,
-    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote, Check, Activity, Circle, CheckCircle2, Bot
+    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote, Check, Activity, Circle, CheckCircle2, Bot, RotateCcw
 } from 'lucide-react';
 
 // ---------- helpers ----------
@@ -60,6 +60,8 @@ const DashboardPage = () => {
     const [habits, setHabits] = useState([]);
     const [loading, setLoading] = useState(true);
     const [now, setNow] = useState(new Date());
+    const [aiInsight, setAiInsight] = useState('');
+    const [insightLoading, setInsightLoading] = useState(false);
 
     const priorityColor = (priority) => priority === 'High' ? '#ef4444' : priority === 'Medium' ? '#f59e0b' : '#10b981';
 
@@ -147,6 +149,20 @@ const DashboardPage = () => {
         };
         fetchAll();
     }, []);
+
+    const fetchAiInsight = async () => {
+        setInsightLoading(true);
+        try {
+            const context = `Student has ${urgentCount} urgent deadlines, ${dashboardTodos.length} focus tasks, and ${currentClass ? `is in class ${currentClass.subject}` : 'is free right now'}. Current time: ${now.toLocaleTimeString()}.`;
+            const res = await aiChat({ message: "Give me one short, high-energy, personalized productivity sentence for my dashboard.", context });
+            setAiInsight(res.data.reply);
+        } catch { }
+        setInsightLoading(false);
+    };
+
+    useEffect(() => {
+        if (!loading && !aiInsight) fetchAiInsight();
+    }, [loading]);
 
     const toggleComplete = async (todo) => {
         try {
@@ -240,8 +256,8 @@ const DashboardPage = () => {
             </div>
 
             {/* AI Smart Suggestion Banner */}
-            {urgentCount > 0 && (
-                <div className="glass-card fade-up" style={{ marginBottom: '1.5rem', padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'linear-gradient(90deg, rgba(236,72,153,0.1), rgba(139,92,246,0.05))', borderLeft: '4px solid #ec4899' }}>
+            {(urgentCount > 0 || aiInsight) && (
+                <div className="glass-card fade-up" style={{ marginBottom: '1.5rem', padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'linear-gradient(90deg, rgba(236,72,153,0.1), rgba(139,92,246,0.05))', borderLeft: '4px solid #ec4899', position: 'relative' }}>
                     <div style={{ background: 'rgba(236,72,153,0.2)', padding: '0.5rem', borderRadius: '50%' }}>
                         <Bot size={20} color="#ec4899" />
                     </div>
@@ -250,9 +266,15 @@ const DashboardPage = () => {
                             AI Smart Suggestion
                         </h4>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-soft)', lineHeight: 1.5 }}>
-                            You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. I highly recommend heading to the <Link to="/focus-room" style={{ color: '#818cf8', fontWeight: 600 }}>Deep Focus Room</Link> to tackle {upcoming[0]?.title || 'your top priority'} right now.
+                            {aiInsight || (
+                                <>You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. I highly recommend heading to the <Link to="/focus-room" style={{ color: '#818cf8', fontWeight: 600 }}>Deep Focus Room</Link> to tackle {upcoming[0]?.title || 'your top priority'} right now.</>
+                            )}
                         </p>
                     </div>
+                    <button onClick={fetchAiInsight} disabled={insightLoading} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ec4899', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', fontWeight: 600 }}>
+                        <RotateCcw size={14} style={{ animation: insightLoading ? 'spin 1s linear infinite' : 'none' }} />
+                        Refresh
+                    </button>
                 </div>
             )}
 

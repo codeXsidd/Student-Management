@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Trash2, X, Settings, Clock, Save, RotateCcw } from 'lucide-react';
-import API from '../services/api';
+import { Calendar, Plus, Trash2, X, Settings, Clock, Save, RotateCcw, Bot, Sparkles } from 'lucide-react';
+import API, { optimizeSchedule } from '../services/api';
 import toast from 'react-hot-toast';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -25,6 +25,8 @@ const TimetablePage = () => {
     const [showConfig, setShowConfig] = useState(false);
     const [draftConfig, setDraftConfig] = useState(null);
     const [savingConfig, setSavingConfig] = useState(false);
+    const [aiAdvice, setAiAdvice] = useState('');
+    const [optimizing, setOptimizing] = useState(false);
     const today = todayName();
 
     useEffect(() => {
@@ -103,6 +105,21 @@ const TimetablePage = () => {
         } catch { toast.error('Delete failed'); }
     };
 
+    const handleAIOptimize = async () => {
+        setOptimizing(true);
+        const loadingToast = toast.loading('AI is analyzing your timetable...');
+        try {
+            const todosRes = await API.get('/todos');
+            const pendingTodos = todosRes.data.filter(t => !t.completed).length;
+            const res = await optimizeSchedule({ slots, todoCount: pendingTodos });
+            setAiAdvice(res.data.advice);
+            toast.success('Strategy generated! 🎯', { id: loadingToast });
+        } catch (error) {
+            toast.error('Optimization failed', { id: loadingToast });
+        }
+        setOptimizing(false);
+    };
+
     return (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
@@ -114,6 +131,13 @@ const TimetablePage = () => {
                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} />
                         <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 600 }}>Today: {today}</span>
                     </div>
+                    <button onClick={handleAIOptimize} disabled={optimizing} style={{
+                        display: 'flex', alignItems: 'center', gap: 6, padding: '0.4rem 0.9rem',
+                        background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', border: 'none',
+                        borderRadius: 8, cursor: 'pointer', color: 'white', fontSize: '0.82rem', fontWeight: 600
+                    }}>
+                        <Bot size={14} /> AI Strategy
+                    </button>
                     <button onClick={openConfig} style={{
                         display: 'flex', alignItems: 'center', gap: 6, padding: '0.4rem 0.9rem',
                         background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)',
@@ -123,6 +147,18 @@ const TimetablePage = () => {
                     </button>
                 </div>
             </div>
+
+            {aiAdvice && (
+                <div className="glass-card fade-up" style={{ marginBottom: '1.5rem', padding: '1rem 1.25rem', display: 'flex', alignItems: 'flex-start', gap: '0.85rem', background: 'rgba(167,139,250,0.08)', borderLeft: '4px solid #a78bfa', position: 'relative' }}>
+                    <Sparkles size={18} color="#a78bfa" style={{ marginTop: 2 }} />
+                    <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.5 }}>
+                            <strong>AI Study Strategy:</strong> {aiAdvice}
+                        </p>
+                    </div>
+                    <button onClick={() => setAiAdvice('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={14} /></button>
+                </div>
+            )}
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '1rem' }}>
                 💡 Click any cell to add a class · Current config: <strong style={{ color: '#818cf8' }}>{config.totalPeriods} periods</strong>

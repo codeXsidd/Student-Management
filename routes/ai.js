@@ -117,4 +117,23 @@ router.post('/summarize', auth, async (req, res) => {
     }
 });
 
+// 5. Optimize Timetable
+router.post('/optimize', auth, async (req, res) => {
+    try {
+        const { slots, todoCount } = req.body;
+
+        const prompt = `Given these university classes: ${JSON.stringify(slots.map(s => `${s.day} P${s.period}: ${s.subject}`))}\n\nSuggest 3 highly productive study slots today (or earliest available) for ${todoCount} pending tasks. Keep suggestions very short.`;
+
+        try {
+            const responseText = await callAI(prompt, "You are a expert study scheduler.");
+            res.json({ advice: responseText.trim() });
+        } catch (e) {
+            // Mock Fallback
+            res.json({ advice: `Based on your schedule, I recommend focusing between 4 PM and 6 PM today, as you have no classes then. Another great window is tomorrow morning before your first period.` });
+        }
+    } catch (err) {
+        res.status(500).json({ message: "AI Error", error: err.message });
+    }
+});
+
 module.exports = router;
