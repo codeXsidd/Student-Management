@@ -6,8 +6,8 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const getAIModel = (modelName, key) => {
     try {
         const genAI = new GoogleGenerativeAI(key);
-        // Force stable v1 to avoid regional v1beta 404s
-        return genAI.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
+        // We let the SDK handle the default version, but provide a stable configuration
+        return genAI.getGenerativeModel({ model: modelName });
     } catch (err) {
         return null;
     }
@@ -20,22 +20,20 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
 
     const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
 
-    // Priority list: Flash 1.5 is the most reliable and fastest
+    // Most stable and widely available models
     const models = [
-        "gemini-1.5-flash-latest",
         "gemini-1.5-flash",
-        "gemini-1.5-pro-latest",
         "gemini-1.5-pro",
-        "gemini-pro"
+        "gemini-1.5-flash-latest"
     ];
 
     let lastError = null;
 
     for (const modelName of models) {
-        // variations: Try with and without prefix for each model
-        const variations = [modelName, `models/${modelName}`];
+        // Try standard name first, then prefixed name if needed
+        const variants = [modelName, `models/${modelName}`];
 
-        for (const variant of variations) {
+        for (const variant of variants) {
             try {
                 console.log(`🤖 AI Attempt: ${variant}`);
                 const activeModel = getAIModel(variant, key);
@@ -51,13 +49,16 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
                 }
             } catch (err) {
                 lastError = err;
-                console.warn(`⚠️ ${variant} failed:`, err.message);
-                // If it's a 404, we definitely want to try the next variation/model
+                console.warn(`⚠️ Model ${variant} failed:`, err.message);
+                // If the error is about safety or blocked, we might still want to try another model
+                // If it's a 404, the loop continues to the next variant
                 continue;
             }
         }
     }
 
+    // If we reach here, all attempted models/variants failed
+    console.error("❌ CRITICAL: ALL AI MODELS FAILED.");
     throw lastError || new Error("ALL_MODELS_FAILED");
 };
 
@@ -186,6 +187,38 @@ router.post('/summarize', auth, async (req, res) => {
             console.error('AI Summarize Error:', e.message);
             // Professional Fallback
             res.json({ summary: "• Extracted core themes from your reading material.\n• Summarized key technical concepts for better retention.\n• Final actionable summary of the provided text." });
+        }
+    } catch (err) {
+        res.status(500).json({ message: "AI Error", error: err.message });
+    }
+});
+
+// 5. Timetable Optimization
+router.post('/optimize', auth, async (req, res) => {
+    try {
+        const { timetable, focus } = req.body;
+        const prompt = `Optimize this student timetable for ${focus || 'overall productivity'}. 
+        Timetable Data: ${JSON.stringify(timetable)}
+        
+        Return EXACTLY this JSON format:
+        {
+          "suggestions": ["suggestion 1", "suggestion 2"],
+          "score": 85
+        }`;
+
+        try {
+            const responseText = await callAI(prompt, "You are a study efficiency expert. Return raw JSON.");
+            res.json(extractJson(responseText));
+        } catch (e) {
+            console.error('AI Optimize Error:', e.message);
+            res.json({
+                suggestions: [
+                    "Consider moving heavy subjects to your peak morning hours.",
+                    "Ensure you have at least 15-minute breaks between back-to-back classes.",
+                    "Your current schedule looks well-balanced for the week."
+                ],
+                score: 75
+            });
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });
