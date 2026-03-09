@@ -10,6 +10,7 @@ const HabitBuilderPage = () => {
     const [modalMode, setModalMode] = useState('add');
     const [selectedId, setSelectedId] = useState(null);
     const [formData, setFormData] = useState({ name: '', goal: '', frequency: 'daily' });
+    const [habitOffset, setHabitOffset] = useState(0);
 
     const [tipOfDay] = useState(() => {
         const tips = [
@@ -241,66 +242,58 @@ const HabitBuilderPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Goals & Progress - Yearly Calendar */}
-                                <div style={{ marginBottom: '1.25rem', background: 'rgba(0,0,0,0.15)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                {/* Goals & Progress - Monthly Calendar */}
+                                <div style={{ marginBottom: '1.25rem', background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <Calendar size={16} color="#ec4899" /> {new Date().getFullYear()} Consistency Roadmap
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Calendar size={15} color="#ec4899" />
+                                            {(() => {
+                                                const d = new Date();
+                                                d.setMonth(d.getMonth() - habitOffset);
+                                                return d.toLocaleString('default', { month: 'long', year: 'numeric' });
+                                            })()}
                                         </div>
-                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>Scroll horizontally →</div>
+                                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                            <button onClick={() => setHabitOffset(o => o + 1)} style={{ background: 'rgba(236,72,153,0.1)', border: 'none', borderRadius: '6px', padding: '0.2rem 0.4rem', cursor: 'pointer', color: '#ec4899', fontSize: '0.7rem' }}>Prev</button>
+                                            <button onClick={() => setHabitOffset(o => Math.max(0, o - 1))} style={{ background: 'rgba(236,72,153,0.1)', border: 'none', borderRadius: '6px', padding: '0.2rem 0.4rem', cursor: 'pointer', color: '#ec4899', fontSize: '0.7rem' }} disabled={habitOffset === 0}>Next</button>
+                                        </div>
                                     </div>
 
-                                    <div style={{
-                                        display: 'flex',
-                                        gap: '1.5rem',
-                                        overflowX: 'auto',
-                                        paddingBottom: '0.75rem',
-                                        scrollbarWidth: 'thin',
-                                        scrollbarColor: 'rgba(236,72,153,0.3) transparent'
-                                    }} className="custom-scrollbar">
-                                        {Array.from({ length: 12 }).map((_, mIdx) => {
-                                            const mDate = new Date(new Date().getFullYear(), mIdx, 1);
-                                            const mName = mDate.toLocaleString('default', { month: 'short' });
-                                            const daysInM = new Date(new Date().getFullYear(), mIdx + 1, 0).getDate();
-                                            const firstDay = mDate.getDay();
+                                    {(() => {
+                                        const d = new Date();
+                                        d.setMonth(d.getMonth() - habitOffset);
+                                        const y = d.getFullYear();
+                                        const m = d.getMonth();
+                                        const daysInM = new Date(y, m + 1, 0).getDate();
+                                        const firstDay = new Date(y, m, 1).getDay();
 
-                                            return (
-                                                <div key={mIdx} style={{ minWidth: '160px', flexShrink: 0 }}>
-                                                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#cbd5e1', marginBottom: '0.6rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                        {mName}
-                                                    </div>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
-                                                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                                                            <div key={d + mIdx} style={{ fontSize: '0.55rem', color: '#475569', textAlign: 'center', fontWeight: 700 }}>{d}</div>
-                                                        ))}
-                                                        {Array.from({ length: firstDay }).map((_, i) => <div key={`b-${mIdx}-${i}`} />)}
-                                                        {Array.from({ length: daysInM }).map((_, i) => {
-                                                            const dayNum = i + 1;
-                                                            const dStr = `${new Date().getFullYear()}-${String(mIdx + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                                                            const isComp = isCompletedOnDate(habit.completedDates, dStr);
-                                                            const isT = dStr === getDateStr();
-                                                            return (
-                                                                <div
-                                                                    key={dStr}
-                                                                    style={{
-                                                                        aspectRatio: '1', borderRadius: '4px',
-                                                                        background: isComp ? 'rgba(16,185,129,0.25)' : (isT ? 'rgba(236,72,153,0.15)' : 'rgba(255,255,255,0.03)'),
-                                                                        border: isComp ? '1px solid rgba(16,185,129,0.4)' : (isT ? '1px solid rgba(236,72,153,0.4)' : '1px solid transparent'),
-                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem',
-                                                                        color: isComp ? '#10b981' : (isT ? '#ec4899' : '#64748b'),
-                                                                        fontWeight: isComp || isT ? '700' : '500'
-                                                                    }}
-                                                                    title={dStr}
-                                                                >
-                                                                    {dayNum}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                        return (
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.3rem' }}>
+                                                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+                                                    <div key={day} style={{ textAlign: 'center', fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 700 }}>{day}</div>
+                                                ))}
+                                                {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
+                                                {Array.from({ length: daysInM }).map((_, i) => {
+                                                    const dayNum = i + 1;
+                                                    const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                                                    const isComp = isCompletedOnDate(habit.completedDates, ds);
+                                                    const isT = ds === getDateStr();
+                                                    return (
+                                                        <div key={ds} style={{
+                                                            aspectRatio: '1', borderRadius: '6px',
+                                                            background: isComp ? 'rgba(16,185,129,0.2)' : (isT ? 'rgba(236,72,153,0.15)' : 'rgba(255,255,255,0.03)'),
+                                                            border: isComp ? '1px solid rgba(16,185,129,0.5)' : (isT ? '1px solid rgba(236,72,153,0.5)' : '1px solid transparent'),
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            fontSize: '0.7rem', color: isComp ? '#10b981' : (isT ? '#ec4899' : '#94a3b8'),
+                                                            fontWeight: isComp || isT ? '800' : '500'
+                                                        }}>
+                                                            {dayNum}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
 
                                 <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
