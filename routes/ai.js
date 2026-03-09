@@ -16,22 +16,26 @@ const getAIModel = (modelName, key) => {
 const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
     let key = process.env.GEMINI_API_KEY;
     if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
-    key = key.trim();
+
+    // Aggressive cleaning: trim whitespace and remove common paste-errors like extra quotes
+    key = key.trim().replace(/^["']|["']$/g, '');
 
     const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
 
-    // Most stable and widely available models
+    // Expanded fallback roster for better regional coverage
     const models = [
         "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
         "gemini-1.5-pro",
-        "gemini-1.5-flash-latest"
+        "gemini-2.0-flash-exp",
+        "gemini-1.0-pro"
     ];
 
     let lastError = null;
 
-    for (const modelName of models) {
-        // Try standard name first, then prefixed name if needed
-        const variants = [modelName, `models/${modelName}`];
+    for (const m of models) {
+        // Try both raw and prefixed variants
+        const variants = [m, `models/${m}`];
 
         for (const variant of variants) {
             try {
@@ -50,14 +54,12 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
             } catch (err) {
                 lastError = err;
                 console.warn(`⚠️ Model ${variant} failed:`, err.message);
-                // If the error is about safety or blocked, we might still want to try another model
-                // If it's a 404, the loop continues to the next variant
+                // Continue to next available fallback
                 continue;
             }
         }
     }
 
-    // If we reach here, all attempted models/variants failed
     console.error("❌ CRITICAL: ALL AI MODELS FAILED.");
     throw lastError || new Error("ALL_MODELS_FAILED");
 };
