@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getHabits, createHabit, updateHabit, deleteHabit, toggleHabit } from '../services/api';
 import toast from 'react-hot-toast';
-import { Activity, Plus, Edit2, Trash2, CheckCircle2, Circle, Flame, Target, Trophy, X, Zap } from 'lucide-react';
+import { Activity, Plus, Edit2, Trash2, CheckCircle2, Circle, Flame, Target, Trophy, X, Zap, Calendar } from 'lucide-react';
 
 const HabitBuilderPage = () => {
     const [habits, setHabits] = useState([]);

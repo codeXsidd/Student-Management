@@ -1,7 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
-import { TrendingUp, Flame, CheckCircle2, Clock, Calendar as CalendarIcon, Activity } from 'lucide-react';
+import { TrendingUp, Flame, CheckCircle2, Clock, Calendar as CalendarIcon, Activity, BookOpen, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    PointElement,
+    LineElement,
+    ArcElement,
+    Tooltip,
+    Legend,
+    Filler
+} from 'chart.js';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    PointElement,
+    LineElement,
+    ArcElement,
+    Tooltip,
+    Legend,
+    Filler
+);
 
 const AnalyticsPage = () => {
     const [journal, setJournal] = useState([]);
@@ -29,16 +54,19 @@ const AnalyticsPage = () => {
         fetchStats();
     }, []);
 
-    // Process data
+    // ── Process Core Stats ──
     const totalHours = journal.reduce((sum, entry) => sum + (entry.hoursStudied || 0), 0);
     const completedTasks = todos.filter(t => t.completed).length;
     const totalTasks = todos.length;
+    const taskCompletionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-    // Streak logic
+    // ── Streak logic ──
     const sortedDates = journal.map(e => e.date).sort((a, b) => b.localeCompare(a));
     let currentStreak = 0;
     let curDate = new Date().toISOString().split('T')[0];
-    for (const d of sortedDates) {
+    const uniqueSortedDates = [...new Set(sortedDates)];
+
+    for (const d of uniqueSortedDates) {
         if (d === curDate) {
             currentStreak++;
             const dt = new Date(d);
@@ -49,105 +77,184 @@ const AnalyticsPage = () => {
         }
     }
 
-    // Heatmap (Last 30 Days)
-    const last30Days = Array.from({ length: 30 }).map((_, i) => {
+    // ── 1. Study Hours Trend (Last 14 Days) ──
+    const last14Days = Array.from({ length: 14 }).map((_, i) => {
         const d = new Date();
-        d.setDate(d.getDate() - (29 - i));
-        return {
-            dateStr: d.toISOString().split('T')[0],
-            dayNum: d.getDate()
-        };
+        d.setDate(d.getDate() - (13 - i));
+        return d.toISOString().split('T')[0];
     });
 
-    const getIntensity = (dateStr) => {
-        const jEntry = journal.find(j => j.date === dateStr);
-        if (!jEntry) return 0;
-        if (jEntry.hoursStudied >= 4) return 3;
-        if (jEntry.hoursStudied >= 2) return 2;
-        return 1;
+    const hoursTrendData = {
+        labels: last14Days.map(d => new Date(d).toLocaleDateString('default', { day: 'numeric', month: 'short' })),
+        datasets: [{
+            label: 'Study Hours',
+            data: last14Days.map(d => journal.filter(j => j.date === d).reduce((s, e) => s + (e.hoursStudied || 0), 0)),
+            backgroundColor: 'rgba(99, 102, 241, 0.4)',
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            pointBackgroundColor: '#6366f1',
+            fill: true,
+            tension: 0.4
+        }]
+    };
+
+    // ── 2. Subject Focus (Total Hours per Subject) ──
+    const subjectMap = {};
+    journal.forEach(entry => {
+        const subs = entry.subjects || [];
+        const hoursPerSub = entry.hoursStudied / (subs.length || 1);
+        subs.forEach(s => {
+            subjectMap[s] = (subjectMap[s] || 0) + hoursPerSub;
+        });
+    });
+
+    const subjectLabels = Object.keys(subjectMap);
+    const subjectHours = Object.values(subjectMap);
+
+    const subjectData = {
+        labels: subjectLabels,
+        datasets: [{
+            label: 'Hours Spent',
+            data: subjectHours,
+            backgroundColor: [
+                '#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#14b8a6', '#f59e0b'
+            ],
+            borderWidth: 0,
+            hoverOffset: 4
+        }]
+    };
+
+    // ── 3. Habit Completion Stats ──
+    const habitCompletionData = {
+        labels: habits.map(h => h.name),
+        datasets: [{
+            label: 'Total Completions',
+            data: habits.map(h => h.totalCompleted || 0),
+            backgroundColor: 'rgba(236, 72, 153, 0.6)',
+            borderColor: '#ec4899',
+            borderWidth: 1,
+            borderRadius: 6
+        }]
     };
 
     if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading Analytics...</div>;
 
+    const chartOptions = {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleFont: { weight: 'bold' },
+                padding: 10,
+                cornerRadius: 8
+            }
+        },
+        scales: {
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+        }
+    };
+
     return (
-        <div className="page-container fade-in">
+        <div className="page-container animate-slide-scale">
             <div className="section-title">
                 <TrendingUp size={26} color="#10b981" /> Productivity Analytics
             </div>
 
-            {/* Quick Stats Grid */}
-            <div className="stats-grid" style={{ marginBottom: '2rem', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))' }}>
-                <div className="glass-card fade-up" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #f59e0b' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Flame size={24} color="#f59e0b" />
-                    </div>
-                    <div>
-                        <p style={{ color: 'var(--text-soft)', fontSize: '0.85rem', fontWeight: 600 }}>Study Streak</p>
-                        <p className="stat-number">{currentStreak} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>days</span></p>
-                    </div>
-                </div>
-
-                <div className="glass-card fade-up" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #6366f1', animationDelay: '0.1s' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Clock size={24} color="#6366f1" />
-                    </div>
-                    <div>
-                        <p style={{ color: 'var(--text-soft)', fontSize: '0.85rem', fontWeight: 600 }}>Total Hours</p>
-                        <p className="stat-number">{totalHours}</p>
+            {/* Core Stats Overview */}
+            <div className="stats-grid" style={{ marginBottom: '2rem', gap: '1.25rem' }}>
+                <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid #f59e0b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ background: 'rgba(245,158,11,0.1)', padding: '0.6rem', borderRadius: 10 }}><Flame size={20} color="#f59e0b" /></div>
+                        <div>
+                            <p style={{ color: 'var(--text-soft)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>Current Streak</p>
+                            <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#f59e0b' }}>{currentStreak} <span style={{ fontSize: '0.9rem', opacity: 0.7 }}>days</span></p>
+                        </div>
                     </div>
                 </div>
-
-                <div className="glass-card fade-up" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid #10b981', animationDelay: '0.2s' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <CheckCircle2 size={24} color="#10b981" />
+                <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid #6366f1' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ background: 'rgba(99,102,241,0.1)', padding: '0.6rem', borderRadius: 10 }}><Clock size={20} color="#6366f1" /></div>
+                        <div>
+                            <p style={{ color: 'var(--text-soft)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>Focus Time</p>
+                            <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#6366f1' }}>{totalHours.toFixed(1)} <span style={{ fontSize: '0.9rem', opacity: 0.7 }}>hours</span></p>
+                        </div>
                     </div>
-                    <div>
-                        <p style={{ color: 'var(--text-soft)', fontSize: '0.85rem', fontWeight: 600 }}>Tasks Done</p>
-                        <p className="stat-number">{completedTasks} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ {totalTasks}</span></p>
+                </div>
+                <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid #10b981' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ background: 'rgba(16,185,129,0.1)', padding: '0.6rem', borderRadius: 10 }}><CheckCircle2 size={20} color="#10b981" /></div>
+                        <div>
+                            <p style={{ color: 'var(--text-soft)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>Task Mastery</p>
+                            <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#10b981' }}>{taskCompletionRate}% <span style={{ fontSize: '0.9rem', opacity: 0.7 }}>done</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Heatmap Section */}
-            <div className="glass-card fade-in" style={{ padding: '2rem', marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1.5rem' }}>
-                    <CalendarIcon size={20} color="#ec4899" /> 30-Day Activity Heatmap
-                </h3>
+            {/* Charts Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                {/* 1. Study Hours Trend */}
+                <div className="glass-card" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Activity size={18} color="#6366f1" /> Study Hours (Last 14 Days)
+                    </h3>
+                    <Line data={hoursTrendData} options={chartOptions} height={120} />
+                </div>
 
-                <div style={{
-                    display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '0.5rem',
-                    background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: 16
-                }}>
-                    {last30Days.map((day, i) => {
-                        const intensity = getIntensity(day.dateStr);
-                        const colors = ['rgba(255,255,255,0.05)', '#6366f1cc', '#8b5cf6', '#ec4899'];
-                        return (
-                            <div key={i} title={`${day.dateStr}: Intensity ${intensity}`} style={{
-                                aspectRatio: '1', borderRadius: '4px', background: colors[intensity],
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '0.7rem', color: intensity === 0 ? 'var(--text-disabled)' : 'white',
-                                fontWeight: intensity > 0 ? 800 : 500
-                            }}>
-                                {day.dayNum}
+                {/* 2. Subject Distribution */}
+                <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <BookOpen size={18} color="#8b5cf6" /> Focus Distribution
+                    </h3>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '220px' }}>
+                        {subjectLabels.length > 0 ? (
+                            <div style={{ width: '220px' }}>
+                                <Doughnut data={subjectData} options={{ maintainAspectRatio: true, plugins: { legend: { display: true, position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } } } } }} />
                             </div>
-                        )
-                    })}
+                        ) : (
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Log study sessions to see subject analytics.</p>
+                        )}
+                    </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Less <div style={{ width: 12, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
-                    <div style={{ width: 12, height: 12, background: '#6366f1cc', borderRadius: 2 }} />
-                    <div style={{ width: 12, height: 12, background: '#8b5cf6', borderRadius: 2 }} />
-                    <div style={{ width: 12, height: 12, background: '#ec4899', borderRadius: 2 }} /> More
+
+                {/* 3. Habit Consistency */}
+                <div className="glass-card" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Target size={18} color="#ec4899" /> Habit Consistency
+                    </h3>
+                    {habits.length > 0 ? (
+                        <Bar data={habitCompletionData} options={chartOptions} height={120} />
+                    ) : (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No habits added yet.</p>
+                    )}
+                </div>
+
+                {/* 30-Day Activity Overview (Heatmap replacement/complement) */}
+                <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(99,102,241,0.05) 100%)' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <CalendarIcon size={18} color="#10b981" /> 30-Day Pulse
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>High-density overview of your daily consistency.</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '0.4rem' }}>
+                        {Array.from({ length: 30 }).map((_, i) => {
+                            const d = new Date(); d.setDate(d.getDate() - (29 - i));
+                            const ds = d.toISOString().split('T')[0];
+                            const entry = journal.find(j => j.date === ds);
+                            const h = entry ? entry.hoursStudied : 0;
+                            const colors = ['rgba(255,255,255,0.03)', 'rgba(99,102,241,0.2)', 'rgba(99,102,241,0.5)', '#6366f1'];
+                            const idx = h >= 6 ? 3 : h >= 3 ? 2 : h > 0 ? 1 : 0;
+                            return (
+                                <div key={i} title={`${ds}: ${h}h`} style={{ aspectRatio: '1', borderRadius: '4px', background: colors[idx], border: '1px solid rgba(255,255,255,0.03)' }} />
+                            );
+                        })}
+                    </div>
+                    <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+                        <Link to="/journal" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10b981', textDecoration: 'none' }}>Log Today's Work →</Link>
+                    </div>
                 </div>
             </div>
-
-            {/* CTA */}
-            <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-                <Link to="/journal" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                    <Activity size={18} /> Update Study Journal
-                </Link>
-            </div>
-
         </div>
     );
 };
