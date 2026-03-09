@@ -20,14 +20,36 @@ const getAIModel = (modelName = "gemini-1.5-flash") => {
     }
 };
 
+// Helper to extract JSON from AI response safely
+const extractJson = (text) => {
+    try {
+        // Try direct parse first
+        return JSON.parse(text.trim());
+    } catch (e) {
+        try {
+            // Find first { or [ and last } or ]
+            const firstBrace = text.search(/\{|\[/);
+            const lastBrace = Math.max(text.lastIndexOf('}'), text.lastIndexOf(']'));
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                const cleaned = text.substring(firstBrace, lastBrace + 1);
+                return JSON.parse(cleaned);
+            }
+        } catch (inner) {
+            console.error("Failed to extract JSON from text:", text);
+        }
+        throw new Error("JSON_PARSE_FAILED");
+    }
+};
+
 const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
     const key = process.env.GEMINI_API_KEY;
     if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
 
     const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
 
-    // Expanded fallbacks including 8B (fastest) and legacy models
+    // Expanded fallbacks
     const models = [
+        "gemini-1.5-flash-latest",
         "gemini-1.5-flash",
         "gemini-1.5-flash-8b",
         "gemini-1.5-pro",
@@ -52,15 +74,24 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
             }
         } catch (err) {
             lastError = err;
-            console.warn(`⚠️ Model ${modelName} encountered an error:`, err.message);
-            // On safety or block errors, we should still try the next model just in case of false positives
+            console.warn(`⚠️ Model ${modelName} failed:`, err.message);
             continue;
         }
     }
 
-    console.error("❌ ALL AI MODELS FAILED. Last Error:", lastError?.message);
+    console.error("❌ ALL AI MODELS FAILED.");
     throw lastError || new Error("ALL_MODELS_FAILED");
 };
+
+// Diagnostics: Test AI Key
+router.get('/verify', auth, async (req, res) => {
+    try {
+        const text = await callAI("Respond with only the word 'READY' if you can hear me.", "Safety test.");
+        res.json({ status: 'Connected', response: text });
+    } catch (err) {
+        res.status(500).json({ status: 'Error', message: err.message, key_exists: !!process.env.GEMINI_API_KEY });
+    }
+});
 
 
 // 1. Break down a complex task into subtasks
@@ -73,8 +104,7 @@ router.post('/breakdown', auth, async (req, res) => {
 
         try {
             const responseText = await callAI(prompt);
-            const rawJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const subtasks = JSON.parse(rawJson);
+            const subtasks = extractJson(responseText);
             res.json(subtasks);
         } catch (e) {
             // Mock Fallback
@@ -100,8 +130,7 @@ router.post('/flashcards', auth, async (req, res) => {
 
         try {
             const responseText = await callAI(prompt, "You extract key concepts and testing material.");
-            const rawJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const cards = JSON.parse(rawJson);
+            const cards = extractJson(responseText);
             res.json(cards);
         } catch (e) {
             // Mock Fallback
@@ -168,14 +197,13 @@ router.post('/summarize', auth, async (req, res) => {
 router.post('/gpa-strategy', auth, async (req, res) => {
     try {
         const { currentCgpa, targetCgpa, remainingSems } = req.body;
-        
+
         const prompt = `Student current CGPA is ${currentCgpa}. Target is ${targetCgpa} with ${remainingSems} semesters left. 
         Calculate required average SGPA. Return EXACTLY a JSON: {"requiredSgpa": "9.2", "advice": "...", "difficulty": "Hard/Moderate/Easy"}`;
 
         try {
             const responseText = await callAI(prompt, "You are a professional academic advisor. Return only raw JSON.");
-            const rawJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-            res.json(JSON.parse(rawJson));
+            res.json(extractJson(responseText));
         } catch (e) {
             console.error('GPA Strategy AI Error:', e.message);
             // Intelligent Fallback Calculation
