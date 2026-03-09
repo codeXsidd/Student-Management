@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
-import { TrendingUp, Flame, CheckCircle2, Clock, Calendar as CalendarIcon, Activity, BookOpen, Target } from 'lucide-react';
+import { TrendingUp, Flame, CheckCircle2, Clock, Calendar as CalendarIcon, Activity, BookOpen, Target, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import {
