@@ -5,12 +5,9 @@ const path = require('path');
 const dns = require('dns');
 require('dotenv').config();
 
-// Only override DNS in local development (fixes some ISPs blocking MongoDB Atlas)
-// Do NOT override in production as it may break cloud environments like Render
-if (process.env.NODE_ENV !== 'production') {
-  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
-  dns.setDefaultResultOrder('ipv4first');
-}
+// Enable reliable DNS globally to fix connectivity issues with AI/DB APIs on certain networks
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'https://smartstudy-hub.vercel.app', 'https://studytrack-hub.vercel.app'];

@@ -4,47 +4,61 @@ const auth = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const getAIModel = (modelName = "gemini-1.5-flash") => {
-    const key = process.env.GEMINI_API_KEY;
+    let key = process.env.GEMINI_API_KEY;
     if (!key) return null;
+    key = key.trim(); // Aggressive trimming to prevent hidden whitespace errors
+
+    // Ensure model name has 'models/' prefix which is safer for standard SDK calls
+    const formattedModelName = modelName.startsWith('models/') ? modelName : `models/${modelName}`;
+
     try {
         const genAI = new GoogleGenerativeAI(key);
-        // Standard initialization (works for v1 by default)
-        return genAI.getGenerativeModel({ model: modelName });
+        return genAI.getGenerativeModel({ model: formattedModelName });
     } catch (err) {
-        console.error(`❌ AI Init Error (${modelName}):`, err.message);
+        console.error(`❌ AI Init Error (${formattedModelName}):`, err.message);
         return null;
     }
 };
 
 const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
     const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("API_KEY_MISSING");
+    if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
 
-    // Include system instructions at the start of the prompt for best compatibility
     const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
 
-    // Sequential fallbacks
-    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"];
+    // Expanded fallbacks including 8B (fastest) and legacy models
+    const models = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
+        "gemini-1.5-pro",
+        "gemini-pro",
+        "gemini-1.0-pro"
+    ];
     let lastError = null;
 
     for (const modelName of models) {
         try {
-            console.log(`🤖 Attempting AI call with: ${modelName}`);
+            console.log(`🤖 AI Call Attempt: ${modelName}`);
             const activeModel = getAIModel(modelName);
             if (!activeModel) continue;
 
             const result = await activeModel.generateContent(fullPrompt);
             const response = await result.response;
             const text = response.text();
-            if (text) return text;
+
+            if (text && text.length > 0) {
+                console.log(`✅ AI Success using: ${modelName}`);
+                return text;
+            }
         } catch (err) {
             lastError = err;
-            console.warn(`⚠️ Model ${modelName} failed:`, err.message);
-            // Try next model for any error (quota, safety, or 404)
+            console.warn(`⚠️ Model ${modelName} encountered an error:`, err.message);
+            // On safety or block errors, we should still try the next model just in case of false positives
             continue;
         }
     }
 
+    console.error("❌ ALL AI MODELS FAILED. Last Error:", lastError?.message);
     throw lastError || new Error("ALL_MODELS_FAILED");
 };
 
@@ -150,19 +164,28 @@ router.post('/summarize', auth, async (req, res) => {
     }
 });
 
-// 5. Optimize Timetable
-router.post('/optimize', auth, async (req, res) => {
+// 6. GPA Strategy Predictor
+router.post('/gpa-strategy', auth, async (req, res) => {
     try {
-        const { slots, todoCount } = req.body;
-
-        const prompt = `Given these university classes: ${JSON.stringify(slots.map(s => `${s.day} P${s.period}: ${s.subject}`))}\n\nSuggest 3 highly productive study slots today (or earliest available) for ${todoCount} pending tasks. Keep suggestions very short.`;
+        const { currentCgpa, targetCgpa, remainingSems } = req.body;
+        
+        const prompt = `Student current CGPA is ${currentCgpa}. Target is ${targetCgpa} with ${remainingSems} semesters left. 
+        Calculate required average SGPA. Return EXACTLY a JSON: {"requiredSgpa": "9.2", "advice": "...", "difficulty": "Hard/Moderate/Easy"}`;
 
         try {
-            const responseText = await callAI(prompt, "You are a expert study scheduler.");
-            res.json({ advice: responseText.trim() });
+            const responseText = await callAI(prompt, "You are a professional academic advisor. Return only raw JSON.");
+            const rawJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+            res.json(JSON.parse(rawJson));
         } catch (e) {
-            // Mock Fallback
-            res.json({ advice: `Based on your schedule, I recommend focusing between 4 PM and 6 PM today, as you have no classes then. Another great window is tomorrow morning before your first period.` });
+            console.error('GPA Strategy AI Error:', e.message);
+            // Intelligent Fallback Calculation
+            const diff = (targetCgpa * 8) - (currentCgpa * (8 - remainingSems));
+            const reqSgpa = Math.min(10, Math.max(0, diff / remainingSems)).toFixed(2);
+            res.json({
+                requiredSgpa: reqSgpa,
+                advice: `To reach your ${targetCgpa} goal, you'll need to maintain around ${reqSgpa} SGPA. Focus on core subjects with high credits.`,
+                difficulty: reqSgpa > 9 ? "Hard" : reqSgpa > 7.5 ? "Moderate" : "Easy"
+            });
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });

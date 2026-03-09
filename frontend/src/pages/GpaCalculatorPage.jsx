@@ -133,17 +133,24 @@ const GpaCalculatorPage = () => {
             const remainingSems = 8 - savedSemsCount;
             const currentCgpa = calcCGPA(semData);
 
-            const prompt = `Student current CGPA is ${currentCgpa} after ${savedSemsCount} semesters. 
-            Their target CGPA is ${targetCgpa}. 
-            There are ${remainingSems} semesters remaining. 
-            Calculate what average SGPA they need in remaining semesters. 
-            Give a motivational 2-sentence breakdown and specific grade targets (e.g. "You need mostly A+ grades"). 
-            Return EXACTLY a JSON: {"requiredSgpa": "9.2", "advice": "...", "difficulty": "Hard/Moderate/Easy"}`;
+            if (remainingSems <= 0) {
+                toast.error("You've already completed all 8 semesters!");
+                setAnalyzing(false);
+                return;
+            }
 
-            const res = await API.post('/ai/chat', { message: prompt });
-            setAiAnalysis(JSON.parse(res.data.reply.replace(/```json/g, '').replace(/```/g, '').trim()));
+            const res = await API.post('/ai/gpa-strategy', {
+                currentCgpa,
+                targetCgpa,
+                remainingSems
+            });
+
+            setAiAnalysis(res.data);
             toast.success('Strategy generated!');
-        } catch { toast.error('Failed to analyze. Check your API key.'); }
+        } catch (err) {
+            console.error('GPA Analysis Error:', err);
+            toast.error('Could not generate strategy. Please try again.');
+        }
         setAnalyzing(false);
     };
 
