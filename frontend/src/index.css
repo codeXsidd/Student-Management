@@ -550,3 +550,41 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* AI Glow Pulse & Premium Animations */
+@keyframes ai-glow-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.4);
+  }
+
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 12px rgba(236, 72, 153, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+  }
+}
+
+.ai-icon-pulse {
+  animation: ai-glow-pulse 2s infinite;
+}
+
+@keyframes slideScale {
+  0% {
+    transform: translateY(15px) scale(0.97);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-slide-scale {
+  animation: slideScale 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

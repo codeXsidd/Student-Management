@@ -257,23 +257,26 @@ const DashboardPage = () => {
 
             {/* AI Smart Suggestion Banner */}
             {(urgentCount > 0 || aiInsight) && (
-                <div className="glass-card" style={{ marginBottom: '1.5rem', padding: '1.5rem', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', background: 'linear-gradient(90deg, rgba(236,72,153,0.1), rgba(139,92,246,0.05))', borderLeft: '4px solid #ec4899', position: 'relative' }}>
-                    <div className="float" style={{ background: 'rgba(236,72,153,0.2)', padding: '0.6rem', borderRadius: '50%', flexShrink: 0 }}>
+                <div className="glass-card animate-slide-scale" style={{ marginBottom: '1.5rem', padding: '1.5rem', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', background: 'linear-gradient(90deg, rgba(236,72,153,0.1), rgba(139,92,246,0.05))', borderLeft: '4px solid #ec4899', position: 'relative', overflow: 'hidden' }}>
+                    <div className="ai-icon-pulse" style={{ background: 'rgba(236,72,153,0.2)', padding: '0.6rem', borderRadius: '50%', flexShrink: 0 }}>
                         <Bot size={24} color="#ec4899" />
                     </div>
                     <div style={{ flex: 1 }}>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.5rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.4rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
                             AI Smart Suggestion
                         </h4>
-                        <p style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6 }}>
-                            {aiInsight || (
-                                <>You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. I highly recommend heading to the <Link to="/focus-room" style={{ color: '#a78bfa', fontWeight: 700 }}>Deep Focus Room</Link> to tackle {upcoming[0]?.title || 'your top priority'} right now.</>
+                        <div style={{ fontSize: '0.92rem', color: '#cbd5e1', lineHeight: 1.6, fontWeight: 500 }}>
+                            {insightLoading ? (
+                                <span className="flex items-center gap-2 animate-pulse text-indigo-300">
+                                    Analyzing your academic progress...
+                                </span>
+                            ) : aiInsight || (
+                                <>You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. I highly recommend heading to the <Link to="/focus-room" style={{ color: '#a78bfa', fontWeight: 700 }}>Deep Focus Room</Link> to tackle your priorities.</>
                             )}
-                        </p>
+                        </div>
                     </div>
-                    <button onClick={fetchAiInsight} disabled={insightLoading} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ec4899', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                        <RotateCcw size={14} style={{ animation: insightLoading ? 'spin 1s linear infinite' : 'none' }} />
-                        REFRESH
+                    <button onClick={fetchAiInsight} disabled={insightLoading} style={{ background: 'rgba(236,72,153,0.1)', border: 'none', cursor: 'pointer', color: '#ec4899', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: '50%', transition: 'all 0.3s' }} title="Refresh Suggestion">
+                        <RotateCcw size={18} style={{ animation: insightLoading ? 'spin 1s linear infinite' : 'none' }} />
                     </button>
                 </div>
             )}
@@ -467,7 +470,9 @@ const DashboardPage = () => {
                             })}
                         </div>
                     )}
-                </div>                {/* ── Quick Actions ── */}
+                </div>
+
+                {/* ── Quick Actions ── */}
                 <div className="glass-card" style={{ padding: '1.25rem' }}>
                     <h2 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 7 }}>
                         <Zap size={16} color="#f59e0b" /> Quick Actions

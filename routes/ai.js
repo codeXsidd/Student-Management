@@ -3,35 +3,55 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const getAIModel = () => {
+const getAIModel = (modelName = "gemini-1.5-flash") => {
     const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-        console.warn('⚠️ GEMINI_API_KEY is missing. AI features will run in Demo Mode.');
-        return null;
-    }
+    if (!key) return null;
     try {
         const genAI = new GoogleGenerativeAI(key);
-        return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        return genAI.getGenerativeModel({ model: modelName });
     } catch (err) {
-        console.error('❌ AI Initialization Error:', err.message);
+        console.error(`❌ AI Init Error (${modelName}):`, err.message);
         return null;
     }
 };
 
 let model = getAIModel();
 
-// Helper to reliably interact with AI
+// Helper to reliably interact with AI with automatic fallback
 const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
-    if (!model) {
-        model = getAIModel();
-        if (!model) throw new Error("API_KEY_MISSING");
+    try {
+        if (!model) {
+            model = getAIModel();
+            if (!model) throw new Error("API_KEY_MISSING");
+        }
+
+        try {
+            const result = await model.generateContent({
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                systemInstruction: { role: "system", parts: [{ text: systemInstruction }] },
+                generationConfig: { temperature: 0.7 }
+            });
+            return result.response.text();
+        } catch (innerErr) {
+            // Fallback to gemini-pro if 1.5 fails (often region/SDK version specific)
+            if (innerErr.message.includes('404') || innerErr.message.includes('not found')) {
+                console.warn('⚠️ gemini-1.5-flash not found, attempting fallback to gemini-pro...');
+                const fallbackModel = getAIModel("gemini-pro");
+                if (fallbackModel) {
+                    const result = await fallbackModel.generateContent({
+                        contents: [{ role: "user", parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.7 }
+                    });
+                    return result.response.text();
+                }
+            }
+            throw innerErr;
+        }
+    } catch (err) {
+        console.error('--- AI Request Failed ---');
+        console.error('Error:', err.message);
+        throw err;
     }
-    const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        systemInstruction: { role: "system", parts: [{ text: systemInstruction }] },
-        generationConfig: { temperature: 0.7 }
-    });
-    return result.response.text();
 };
 
 
