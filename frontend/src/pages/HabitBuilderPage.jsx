@@ -205,33 +205,22 @@ const HabitBuilderPage = () => {
                     {habits.map(habit => {
                         const completed = isCompletedToday(habit.completedDates);
 
-                        // Year progress heatmap logic
-                        const currentYear = new Date().getFullYear();
-                        const startOfYear = new Date(currentYear, 0, 1);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
+                        // Current month progress
+                        const now = new Date();
+                        const year = now.getFullYear();
+                        const month = now.getMonth();
+                        const daysInMonth = new Date(year, month + 1, 0).getDate();
+                        const firstDayOfMonth = new Date(year, month, 1).getDay();
 
-                        // Generate days for the heatmap
-                        // We'll show the last 365 days or current year?
-                        // User said "year calendar", so let's do current year.
-                        const daysArr = [];
-                        const tempDate = new Date(startOfYear);
-
-                        // Move to the first Sunday/Monday of the year to align grid
-                        const firstDayOffset = tempDate.getDay();
-                        tempDate.setDate(tempDate.getDate() - firstDayOffset);
-
-                        // Fill roughly 53 weeks to cover the year
-                        for (let i = 0; i < 53 * 7; i++) {
-                            const d = new Date(tempDate);
-                            const ds = getDateStr(d);
-                            daysArr.push({
-                                dateStr: ds,
-                                isInYear: d.getFullYear() === currentYear,
-                                completed: isCompletedOnDate(habit.completedDates, ds),
-                                isToday: ds === getDateStr(today)
+                        const currentMonthDays = [];
+                        for (let i = 1; i <= daysInMonth; i++) {
+                            const d = new Date(year, month, i);
+                            currentMonthDays.push({
+                                dateStr: getDateStr(d),
+                                dayNum: i,
+                                completed: isCompletedOnDate(habit.completedDates, getDateStr(d)),
+                                isToday: getDateStr(d) === getDateStr(now)
                             });
-                            tempDate.setDate(tempDate.getDate() + 1);
                         }
 
                         return (
@@ -252,42 +241,65 @@ const HabitBuilderPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Goals & Progress - Year Heatmap */}
-                                <div style={{ marginBottom: '1.25rem', background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px' }}>
-                                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>{currentYear} Consistency</span>
-                                        <span style={{ fontSize: '0.65rem', opacity: 0.8 }}>{habit.totalCompleted} Total Hits</span>
+                                {/* Goals & Progress - Yearly Calendar */}
+                                <div style={{ marginBottom: '1.25rem', background: 'rgba(0,0,0,0.15)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Calendar size={16} color="#ec4899" /> {new Date().getFullYear()} Consistency Roadmap
+                                        </div>
+                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>Scroll horizontally →</div>
                                     </div>
 
                                     <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(53, 1fr)',
-                                        gridTemplateRows: 'repeat(7, 1fr)',
-                                        gap: '2px',
-                                        height: '80px'
-                                    }}>
-                                        {daysArr.map((day, idx) => (
-                                            <div
-                                                key={idx}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    borderRadius: '1px',
-                                                    background: !day.isInYear ? 'transparent' : (day.completed ? '#10b981' : (day.isToday ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)')),
-                                                    opacity: day.completed ? 1 : 0.6,
-                                                    border: day.isToday ? '1px solid #818cf8' : 'none'
-                                                }}
-                                                title={`${day.dateStr} ${day.completed ? '(DONE)' : ''}`}
-                                            />
-                                        ))}
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.55rem', color: '#64748b', fontWeight: 600 }}>
-                                        <span>JAN</span>
-                                        <span>MAR</span>
-                                        <span>MAY</span>
-                                        <span>JUL</span>
-                                        <span>SEP</span>
-                                        <span>NOV</span>
+                                        display: 'flex',
+                                        gap: '1.5rem',
+                                        overflowX: 'auto',
+                                        paddingBottom: '0.75rem',
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: 'rgba(236,72,153,0.3) transparent'
+                                    }} className="custom-scrollbar">
+                                        {Array.from({ length: 12 }).map((_, mIdx) => {
+                                            const mDate = new Date(new Date().getFullYear(), mIdx, 1);
+                                            const mName = mDate.toLocaleString('default', { month: 'short' });
+                                            const daysInM = new Date(new Date().getFullYear(), mIdx + 1, 0).getDate();
+                                            const firstDay = mDate.getDay();
+
+                                            return (
+                                                <div key={mIdx} style={{ minWidth: '160px', flexShrink: 0 }}>
+                                                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#cbd5e1', marginBottom: '0.6rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                        {mName}
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
+                                                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+                                                            <div key={d + mIdx} style={{ fontSize: '0.55rem', color: '#475569', textAlign: 'center', fontWeight: 700 }}>{d}</div>
+                                                        ))}
+                                                        {Array.from({ length: firstDay }).map((_, i) => <div key={`b-${mIdx}-${i}`} />)}
+                                                        {Array.from({ length: daysInM }).map((_, i) => {
+                                                            const dayNum = i + 1;
+                                                            const dStr = `${new Date().getFullYear()}-${String(mIdx + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                                                            const isComp = isCompletedOnDate(habit.completedDates, dStr);
+                                                            const isT = dStr === getDateStr();
+                                                            return (
+                                                                <div
+                                                                    key={dStr}
+                                                                    style={{
+                                                                        aspectRatio: '1', borderRadius: '4px',
+                                                                        background: isComp ? 'rgba(16,185,129,0.25)' : (isT ? 'rgba(236,72,153,0.15)' : 'rgba(255,255,255,0.03)'),
+                                                                        border: isComp ? '1px solid rgba(16,185,129,0.4)' : (isT ? '1px solid rgba(236,72,153,0.4)' : '1px solid transparent'),
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem',
+                                                                        color: isComp ? '#10b981' : (isT ? '#ec4899' : '#64748b'),
+                                                                        fontWeight: isComp || isT ? '700' : '500'
+                                                                    }}
+                                                                    title={dStr}
+                                                                >
+                                                                    {dayNum}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 

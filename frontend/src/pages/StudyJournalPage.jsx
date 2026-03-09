@@ -104,22 +104,21 @@ const StudyJournalPage = () => {
     const entryMap = {};
     entries.forEach(e => { entryMap[e.date] = (entryMap[e.date] || 0) + (e.hoursStudied || 0); });
 
-    const heatmapEnd = new Date();
-    heatmapEnd.setDate(heatmapEnd.getDate() - heatmapOffset * 7);
-    const heatmapStart = new Date(heatmapEnd);
-    heatmapStart.setDate(heatmapStart.getDate() - 17 * 7 + 1);
-    const weeks = [];
-    const c = new Date(heatmapStart);
-    c.setDate(c.getDate() - ((c.getDay() + 6) % 7));
-    while (c <= heatmapEnd) {
-        const week = [];
-        for (let d = 0; d < 7; d++) {
-            const ds = c.toISOString().split('T')[0];
-            week.push({ ds, h: entryMap[ds] || 0, inRange: c >= heatmapStart && c <= heatmapEnd });
-            c.setDate(c.getDate() + 1);
-        }
-        weeks.push(week);
+    // Monthly Calendar Tracker (replaces linear heatmap)
+    const heatmapDate = new Date();
+    heatmapDate.setMonth(heatmapDate.getMonth() - heatmapOffset);
+    const viewYear = heatmapDate.getFullYear();
+    const viewMonth = heatmapDate.getMonth();
+
+    const daysInViewMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const firstDayOfViewMonth = new Date(viewYear, viewMonth, 1).getDay();
+
+    const calendarDays = [];
+    for (let i = 1; i <= daysInViewMonth; i++) {
+        const ds = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        calendarDays.push({ ds, h: entryMap[ds] || 0 });
     }
+
     const heatColor = (h) => {
         if (!h) return 'rgba(99,102,241,0.06)';
         if (h >= 8) return '#6366f1';
@@ -190,38 +189,61 @@ const StudyJournalPage = () => {
                 })}
             </div>
 
-            {/* Heatmap */}
-            <div className="glass-card" style={{ padding: '1.1rem', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-                    <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#e2e8f0' }}>📅 Study Activity Heatmap</p>
-                    <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                        <button onClick={() => setHeatmapOffset(o => o + 1)} style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 5, padding: '0.15rem 0.45rem', cursor: 'pointer', color: '#818cf8' }}><ChevronLeft size={13} /></button>
-                        <button onClick={() => setHeatmapOffset(o => Math.max(0, o - 1))} style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 5, padding: '0.15rem 0.45rem', cursor: 'pointer', color: '#818cf8' }}><ChevronRight size={13} /></button>
-                    </div>
-                </div>
-                <div style={{ display: 'flex', gap: '2px', overflowX: 'auto' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginRight: 3, paddingTop: 16 }}>
-                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => <div key={i} style={{ width: 10, height: 12, fontSize: '0.52rem', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d}</div>)}
-                    </div>
-                    {weeks.map((wk, wi) => (
-                        <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            {wk.map((day, di) => (
-                                <div key={di} title={`${day.ds}: ${day.h}h`} style={{
-                                    width: 12, height: 12, borderRadius: 2,
-                                    background: day.inRange ? heatColor(day.h) : 'transparent',
-                                    border: day.ds === todayStr() ? '1px solid #6366f1' : 'none',
-                                    cursor: day.h ? 'pointer' : 'default', transition: 'transform 0.1s'
-                                }}
-                                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.4)'}
-                                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} />
-                            ))}
+            {/* Monthly Calendar View */}
+            <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ background: 'rgba(99,102,241,0.1)', padding: '0.4rem', borderRadius: '8px' }}>
+                            <Calendar size={18} color="#6366f1" />
                         </div>
-                    ))}
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f8fafc' }}>
+                            {heatmapDate.toLocaleString('default', { month: 'long', year: 'numeric' })} Logs
+                        </h4>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button onClick={() => setHeatmapOffset(o => o + 1)} style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '0.4rem 0.6rem', cursor: 'pointer', color: '#818cf8', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', fontWeight: 600 }}>
+                            <ChevronLeft size={14} /> Prev
+                        </button>
+                        <button onClick={() => setHeatmapOffset(o => Math.max(0, o - 1))} style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '0.4rem 0.6rem', cursor: 'pointer', color: '#818cf8', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', fontWeight: 600 }} disabled={heatmapOffset === 0}>
+                            Next <ChevronRight size={14} />
+                        </button>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginTop: 6, justifyContent: 'flex-end' }}>
-                    <span style={{ fontSize: '0.62rem', color: '#475569' }}>Less</span>
-                    {['rgba(99,102,241,0.06)', '#c7d2fe33', '#a5b4fc', '#818cf8', '#6366f1'].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: 2, background: c }} />)}
-                    <span style={{ fontSize: '0.62rem', color: '#475569' }}>More</span>
+
+                <div style={{ maxWidth: 450, margin: '0 auto' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                            <div key={d} style={{ fontSize: '0.65rem', color: '#64748b', textAlign: 'center', fontWeight: 700, textTransform: 'uppercase' }}>{d}</div>
+                        ))}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
+                        {Array.from({ length: firstDayOfViewMonth }).map((_, i) => (
+                            <div key={`empty-${i}`} />
+                        ))}
+                        {calendarDays.map((day, di) => (
+                            <div key={di} title={`${day.ds}: ${day.h}h study`} style={{
+                                width: '100%', aspectRatio: '1', borderRadius: '8px',
+                                background: heatColor(day.h),
+                                border: day.ds === todayStr() ? '2px solid #6366f1' : '1px solid rgba(255,255,255,0.03)',
+                                cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                position: 'relative', transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                            }}
+                                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: day.h > 2 ? '#fff' : '#94a3b8' }}>{di + 1}</span>
+                                {day.h > 0 && (
+                                    <div style={{ position: 'absolute', bottom: '15%', width: '4px', height: '4px', borderRadius: '50%', background: '#fff' }} />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '1.25rem', justifyContent: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                        <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600 }}>Study Goals:</span>
+                        {['rgba(99,102,241,0.06)', '#c7d2fe33', '#a5b4fc', '#818cf8', '#6366f1'].map((c, i) => (
+                            <div key={c} style={{ width: 14, height: 14, borderRadius: 3, background: c }} title={i === 0 ? '0h' : i === 4 ? '8h+' : `${i * 2}h+`} />
+                        ))}
+                        <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600 }}>Intensity</span>
+                    </div>
                 </div>
             </div>
 
