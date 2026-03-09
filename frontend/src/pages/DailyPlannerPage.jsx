@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Plus, Check, Trash2, Calendar, Star, Layout, ListTodo, Sun, Coffee, Brain, Sparkles, ChevronRight, X, AlertCircle } from 'lucide-react';
+import { Target, Plus, Check, Trash2, Calendar, Star, Layout, ListTodo, Sun, Coffee, Brain, Sparkles, ChevronRight, X, AlertCircle, Bot } from 'lucide-react';
 import API from '../services/api';
+import { breakDownTask } from '../services/api';
 import toast from 'react-hot-toast';
 
 const DailyPlannerPage = () => {
@@ -107,6 +108,28 @@ const DailyPlannerPage = () => {
         setSaving(false);
     };
 
+    const handleAIBreakdown = async () => {
+        if (!newQuickTask.trim()) { toast.error("Enter a large task to break down first!"); return; }
+        setSaving(true);
+        const loadingToast = toast.loading('AI is breaking down your task...');
+        try {
+            const res = await breakDownTask({ taskTitle: newQuickTask });
+            const subtasks = res.data;
+            let addedTodos = [];
+            for (const sub of subtasks) {
+                const addRes = await API.post('/todos', { title: sub.title + ` (${sub.duration})`, dayPlan: true, priority: quickPriority, category: quickCategory });
+                addedTodos.push(addRes.data);
+            }
+            setAllTodos([...addedTodos, ...allTodos]);
+            setNewQuickTask('');
+            toast.success('Task successfully broken down by AI! 🤖', { id: loadingToast });
+        } catch (error) {
+            console.error(error);
+            toast.error('AI breakdown failed', { id: loadingToast });
+        }
+        setSaving(false);
+    };
+
     const addBacklogTask = async () => {
         if (!newBacklogTask.trim()) return;
         setSaving(true);
@@ -169,6 +192,9 @@ const DailyPlannerPage = () => {
                                     />
                                     <Target size={20} color="#6366f1" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
                                 </div>
+                                <button onClick={handleAIBreakdown} disabled={saving} className="btn-primary" style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', border: 'none', padding: '0 0.8rem', borderRadius: 9, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Bot size={18} /> <span className="hide-on-mobile">AI Breakdown</span>
+                                </button>
                                 <button onClick={addQuickTask} disabled={saving} className="btn-primary quick-add-btn">
                                     <Plus size={18} /> <span className="hide-on-mobile">Add</span>
                                 </button>

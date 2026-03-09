@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Play, Pause, Coffee, BookOpen, Clock, Zap, Target } from 'lucide-react';
-import API, { addXP } from '../services/api';
+import { Timer, Play, Pause, Coffee, BookOpen, Clock, Zap, Target, Bot, Send } from 'lucide-react';
+import API, { addXP, aiChat } from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,6 +20,11 @@ const FocusRoomPage = () => {
     // Priority Task Loader
     const [priorityTask, setPriorityTask] = useState(null);
     const [loadingTask, setLoadingTask] = useState(true);
+
+    // AI Tutor Chat
+    const [chatMsg, setChatMsg] = useState('');
+    const [chatLog, setChatLog] = useState([{ role: 'ai', text: 'Stuck? I am your AI study tutor. Ask me anything to clear your doubts without leaving the focus room!' }]);
+    const [chatting, setChatting] = useState(false);
 
     useEffect(() => {
         const fetchTopTask = async () => {
@@ -57,6 +62,24 @@ const FocusRoomPage = () => {
                 if (leveledUp) toast.success(`🎉 Level Up! You are now Level ${level}!`, { icon: '🏆' });
             }).catch(() => { });
         } catch { }
+    };
+
+    const handleSendChat = async (e) => {
+        e.preventDefault();
+        if (!chatMsg.trim()) return;
+        setChatting(true);
+        const userText = chatMsg.trim();
+        setChatLog([...chatLog, { role: 'user', text: userText }]);
+        setChatMsg('');
+
+        try {
+            const context = priorityTask ? `The student is currently working on: ${priorityTask.title}` : '';
+            const res = await aiChat({ message: userText, context });
+            setChatLog(prev => [...prev, { role: 'ai', text: res.data.reply }]);
+        } catch (error) {
+            toast.error("AI couldn't respond.");
+        }
+        setChatting(false);
     };
 
     // Timer Logic
@@ -205,6 +228,36 @@ const FocusRoomPage = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* AI Tutor Chat Panel */}
+                    <div className="glass-card fade-up" style={{ padding: '2.5rem', borderRadius: 24, flex: 1, minWidth: 320, background: 'rgba(10,10,20,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1.5rem' }}>
+                            <Bot size={20} color="#a78bfa" /> AI Study Tutor
+                        </h2>
+
+                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1rem', paddingRight: '0.5rem', maxHeight: 220 }} className="custom-scroll">
+                            {chatLog.map((log, idx) => (
+                                <div key={idx} style={{ alignSelf: log.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '90%', background: log.role === 'user' ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)', padding: '0.75rem 1rem', borderRadius: log.role === 'user' ? '16px 16px 0 16px' : '16px 16px 16px 0', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ fontSize: '0.85rem', color: log.role === 'user' ? '#e2e8f0' : '#a78bfa', lineHeight: 1.5 }}>
+                                        {log.text}
+                                    </p>
+                                </div>
+                            ))}
+                            {chatting && (
+                                <div style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '16px 16px 16px 0' }}>
+                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Thinking...</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <form onSubmit={handleSendChat} style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                            <input type="text" value={chatMsg} onChange={e => setChatMsg(e.target.value)} placeholder="Ask anything..." style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: 12, border: '1px solid rgba(167,139,250,0.2)', background: 'rgba(15,15,26,0.5)', color: 'white', fontSize: '0.9rem' }} />
+                            <button type="submit" disabled={chatting || !chatMsg.trim()} style={{ background: '#a78bfa', border: 'none', color: '#1a1a2e', width: 42, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Send size={18} />
+                            </button>
+                        </form>
+                    </div>
+
                 </div>
             </div>
         </div>

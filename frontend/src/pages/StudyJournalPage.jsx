@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Plus, Trash2, Flame, Calendar, Clock, ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Flame, Calendar, Clock, ChevronLeft, ChevronRight, Save, X, Bot } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from 'chart.js';
-import API from '../services/api';
+import API, { summarizeText } from '../services/api';
 import toast from 'react-hot-toast';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
@@ -57,6 +57,21 @@ const StudyJournalPage = () => {
             else toast.error('Failed to save');
         }
         setSaving(false);
+    };
+
+    const handleAISummarize = async () => {
+        if (!form.notes.trim() || form.notes.length < 20) {
+            toast.error("Paste some text in the notes first to summarize it!");
+            return;
+        }
+        const loadingToast = toast.loading('AI is reading and summarizing...');
+        try {
+            const res = await summarizeText({ text: form.notes });
+            setForm({ ...form, notes: form.notes + '\n\n--- AI Summary ---\n' + res.data.summary });
+            toast.success('Text summarized!', { id: loadingToast });
+        } catch (error) {
+            toast.error('Failed to summarize', { id: loadingToast });
+        }
     };
 
     const deleteEntry = async (id) => {
@@ -316,10 +331,15 @@ const StudyJournalPage = () => {
                                 </div>
                             </div>
                             <div>
-                                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 5 }}>Notes</label>
-                                <textarea className="input" rows={3} placeholder="What did you learn? Reflections..." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} style={{ resize: 'vertical' }} />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8' }}>Notes</label>
+                                    <button type="button" onClick={handleAISummarize} style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', border: 'none', color: 'white', fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                                        <Bot size={12} /> AI Summarize
+                                    </button>
+                                </div>
+                                <textarea className="input" rows={6} placeholder="What did you learn? Or paste a long text here and use AI to summarize it..." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} style={{ resize: 'vertical' }} />
                             </div>
-                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                                 <button type="button" onClick={() => setShowForm(false)} style={{ flex: 1, padding: '0.6rem', borderRadius: 8, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#94a3b8', cursor: 'pointer' }}>Cancel</button>
                                 <button type="submit" disabled={saving} className="btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                                     <Save size={14} /> {saving ? 'Saving...' : 'Save Entry'}

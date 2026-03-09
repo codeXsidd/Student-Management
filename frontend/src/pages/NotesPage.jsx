@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StickyNote, Plus, Trash2, Pin, X } from 'lucide-react';
-import API from '../services/api';
+import { StickyNote, Plus, Trash2, Pin, X, Bot } from 'lucide-react';
+import API, { generateFlashcards } from '../services/api';
 import toast from 'react-hot-toast';
 
 const NOTE_COLORS = [
@@ -77,6 +77,27 @@ const NotesPage = () => {
         } catch { toast.error('Failed'); }
     };
 
+    const convertToFlashcards = async (note) => {
+        if (!note.content || note.content.length < 15) {
+            toast.error("Note is too short to generate flashcards!");
+            return;
+        }
+        const loadingToast = toast.loading('AI is creating flashcards...');
+        try {
+            const res = await generateFlashcards({ noteContent: note.content });
+            const cards = res.data;
+            let newNotes = [];
+            for (const c of cards) {
+                const addRes = await API.post('/notes', { content: `Q: ${c.q}\nA: ${c.a}`, color: note.color });
+                newNotes.push(addRes.data);
+            }
+            setNotes([...newNotes, ...notes]);
+            toast.success(`Created ${newNotes.length} flashcards! 🗂️`, { id: loadingToast });
+        } catch (error) {
+            toast.error('Flashcard generation failed', { id: loadingToast });
+        }
+    };
+
     const pinned = notes.filter(n => n.pinned);
     const unpinned = notes.filter(n => !n.pinned);
 
@@ -120,7 +141,7 @@ const NotesPage = () => {
                                 📌 Pinned
                             </p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.85rem' }}>
-                                {pinned.map(note => <NoteCard key={note._id} note={note} editId={editId} editContent={editContent} setEditId={setEditId} setEditContent={setEditContent} saveEdit={saveEdit} togglePin={togglePin} deleteNote={deleteNote} />)}
+                                {pinned.map(note => <NoteCard key={note._id} note={note} editId={editId} editContent={editContent} setEditId={setEditId} setEditContent={setEditContent} saveEdit={saveEdit} togglePin={togglePin} deleteNote={deleteNote} convertToFlashcards={convertToFlashcards} />)}
                             </div>
                         </div>
                     )}
@@ -130,7 +151,7 @@ const NotesPage = () => {
                         <div>
                             {pinned.length > 0 && <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem' }}>Other Notes</p>}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.85rem' }}>
-                                {unpinned.map(note => <NoteCard key={note._id} note={note} editId={editId} editContent={editContent} setEditId={setEditId} setEditContent={setEditContent} saveEdit={saveEdit} togglePin={togglePin} deleteNote={deleteNote} />)}
+                                {unpinned.map(note => <NoteCard key={note._id} note={note} editId={editId} editContent={editContent} setEditId={setEditId} setEditContent={setEditContent} saveEdit={saveEdit} togglePin={togglePin} deleteNote={deleteNote} convertToFlashcards={convertToFlashcards} />)}
                             </div>
                         </div>
                     )}
@@ -174,7 +195,7 @@ const NotesPage = () => {
     );
 };
 
-const NoteCard = ({ note, editId, editContent, setEditId, setEditContent, saveEdit, togglePin, deleteNote }) => {
+const NoteCard = ({ note, editId, editContent, setEditId, setEditContent, saveEdit, togglePin, deleteNote, convertToFlashcards }) => {
     const [flipped, setFlipped] = useState(false);
     const cs = getColorStyle(note.color);
     const isEditing = editId === note._id;
@@ -199,11 +220,20 @@ const NoteCard = ({ note, editId, editContent, setEditId, setEditContent, saveEd
 
             {/* Top actions */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <button onClick={() => togglePin(note)} title={note.pinned ? 'Unpin' : 'Pin'} style={{
-                    background: 'none', border: 'none', cursor: 'pointer', color: note.pinned ? cs.text : '#64748b', fontSize: '0.9rem', padding: 0
-                }}>
-                    <Pin size={14} fill={note.pinned ? cs.text : 'none'} />
-                </button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => togglePin(note)} title={note.pinned ? 'Unpin' : 'Pin'} style={{
+                        background: 'none', border: 'none', cursor: 'pointer', color: note.pinned ? cs.text : '#64748b', fontSize: '0.9rem', padding: 0
+                    }}>
+                        <Pin size={14} fill={note.pinned ? cs.text : 'none'} />
+                    </button>
+                    {!isFlashcard && (
+                        <button onClick={() => convertToFlashcards(note)} title="Generate AI Flashcards from this note" style={{
+                            background: 'none', border: 'none', cursor: 'pointer', color: '#ec4899', fontSize: '0.9rem', padding: 0
+                        }}>
+                            <Bot size={14} />
+                        </button>
+                    )}
+                </div>
                 <button onClick={() => deleteNote(note._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 0 }}>
                     <Trash2 size={13} />
                 </button>

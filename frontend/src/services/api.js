@@ -54,3 +54,9 @@ export const createHabit = (data) => API.post('/habits', data);
 export const updateHabit = (id, data) => API.put(`/habits/${id}`, data);
 export const deleteHabit = (id) => API.delete(`/habits/${id}`);
 export const toggleHabit = (id, date) => API.post(`/habits/${id}/toggle`, { date });
+
+// AI Productivity
+export const breakDownTask = (data) => API.post('/ai/breakdown', data);
+export const generateFlashcards = (data) => API.post('/ai/flashcards', data);
+export const aiChat = (data) => API.post('/ai/chat', data);
+export const summarizeText = (data) => API.post('/ai/summarize', data);
