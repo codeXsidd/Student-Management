@@ -57,13 +57,13 @@ StudyTrack is an all-in-one, ultra-premium personal student workspace designed t
    ```
 
 2. **Environment Configuration:**
-   Create a `.env` file in the root directory (refer to `.env.example`):
+   Create a `.env` file for local development or set these in your **Render/Hosting Dashboard**:
    ```env
    PORT=5000
    MONGODB_URI=your_mongodb_atlas_string
    JWT_SECRET=your_random_string
-   GEMINI_API_KEY=your_google_ai_studio_key
-   BREVO_API_KEY=your_brevo_api_key
+   GEMINI_API_KEY=your_google_ai_studio_key (Essential for AI Assistant)
+   BREVO_API_KEY=your_brevo_api_key (Essential for Forgot Password)
    ```
 
 3. **Install & Run:**

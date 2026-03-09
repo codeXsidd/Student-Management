@@ -3,21 +3,59 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const getAIModel = (modelName = "gemini-1.5-flash") => {
-    let key = process.env.GEMINI_API_KEY;
-    if (!key) return null;
-    key = key.trim(); // Aggressive trimming to prevent hidden whitespace errors
-
-    // Ensure model name has 'models/' prefix which is safer for standard SDK calls
-    const formattedModelName = modelName.startsWith('models/') ? modelName : `models/${modelName}`;
-
+const getAIModel = (modelName, key) => {
     try {
         const genAI = new GoogleGenerativeAI(key);
-        return genAI.getGenerativeModel({ model: formattedModelName });
+        return genAI.getGenerativeModel({ model: modelName });
     } catch (err) {
-        console.error(`❌ AI Init Error (${formattedModelName}):`, err.message);
         return null;
     }
+};
+
+const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
+    let key = process.env.GEMINI_API_KEY;
+    if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
+    key = key.trim();
+
+    const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
+
+    // Priority list: Try standard names first, then prefix as fallback
+    const modelBases = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro",
+        "gemini-pro"
+    ];
+
+    let lastError = null;
+
+    for (const baseName of modelBases) {
+        // Try both forms: 'model-name' and 'models/model-name'
+        const variations = [baseName, `models/${baseName}`];
+
+        for (const modelName of variations) {
+            try {
+                process.stdout.write(`🤖 AI Attempt: ${modelName}\n`);
+                const activeModel = getAIModel(modelName, key);
+                if (!activeModel) continue;
+
+                const result = await activeModel.generateContent(fullPrompt);
+                const response = await result.response;
+                const text = response.text();
+
+                if (text) {
+                    process.stdout.write(`✅ AI Success: ${modelName}\n`);
+                    return text;
+                }
+            } catch (err) {
+                lastError = err;
+                process.stdout.write(`⚠️ ${modelName} failed: ${err.message}\n`);
+                continue;
+            }
+        }
+    }
+
+    throw lastError || new Error("ALL_MODELS_FAILED");
 };
 
 // Helper to extract JSON from AI response safely
@@ -39,48 +77,6 @@ const extractJson = (text) => {
         }
         throw new Error("JSON_PARSE_FAILED");
     }
-};
-
-const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
-
-    const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
-
-    // Expanded fallbacks
-    const models = [
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b",
-        "gemini-1.5-pro",
-        "gemini-pro",
-        "gemini-1.0-pro"
-    ];
-    let lastError = null;
-
-    for (const modelName of models) {
-        try {
-            console.log(`🤖 AI Call Attempt: ${modelName}`);
-            const activeModel = getAIModel(modelName);
-            if (!activeModel) continue;
-
-            const result = await activeModel.generateContent(fullPrompt);
-            const response = await result.response;
-            const text = response.text();
-
-            if (text && text.length > 0) {
-                console.log(`✅ AI Success using: ${modelName}`);
-                return text;
-            }
-        } catch (err) {
-            lastError = err;
-            console.warn(`⚠️ Model ${modelName} failed:`, err.message);
-            continue;
-        }
-    }
-
-    console.error("❌ ALL AI MODELS FAILED.");
-    throw lastError || new Error("ALL_MODELS_FAILED");
 };
 
 // Diagnostics: Test AI Key
@@ -159,11 +155,11 @@ router.post('/chat', auth, async (req, res) => {
             res.json({ reply: responseText.trim() });
         } catch (e) {
             console.error('❌ AI Chat Detailed Error:', e);
-            // Professional Fallback
+            // Professional Fallback with diagnostic info
             if (e.message === 'API_KEY_MISSING') {
-                res.json({ reply: "I'm currently in **Demonstration Mode**. To enable my full AI capabilities, please ensure the `GEMINI_API_KEY` is set in the server environment settings." });
+                res.json({ reply: "I'm currently in **Demonstration Mode**. To enable my full AI capabilities, please ensure the `GEMINI_API_KEY` is set in the Render environment variables." });
             } else {
-                res.json({ reply: "I'm currently having trouble connecting to my central brain. Let me try to help based on my local knowledge: Consistency is the key to mastering any subject. Try breaking your current focus into 15-minute sprints!" });
+                res.json({ reply: `I'm having trouble connecting to my central brain. Error: ${e.message}. Please verify your API key and region settings on Render.` });
             }
         }
     } catch (err) {
