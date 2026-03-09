@@ -33,16 +33,22 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
             });
             return result.response.text();
         } catch (innerErr) {
-            // Fallback to gemini-pro if 1.5 fails (often region/SDK version specific)
-            if (innerErr.message.includes('404') || innerErr.message.includes('not found')) {
-                console.warn('⚠️ gemini-1.5-flash not found, attempting fallback to gemini-pro...');
-                const fallbackModel = getAIModel("gemini-pro");
+            console.error(`⚠️ Initial AI attempt (${model.model}) failed:`, innerErr.message);
+            // Fallback to gemini-1.5-pro or gemini-1.5-flash-8b if the first one fails
+            if (innerErr.message.includes('404') || innerErr.message.includes('not found') || innerErr.message.includes('Failed to fetch')) {
+                console.warn('⚠️ primary model failed, attempting fallback to gemini-1.5-pro...');
+                const fallbackModel = getAIModel("gemini-1.5-pro");
                 if (fallbackModel) {
-                    const result = await fallbackModel.generateContent({
-                        contents: [{ role: "user", parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.7 }
-                    });
-                    return result.response.text();
+                    try {
+                        const result = await fallbackModel.generateContent({
+                            contents: [{ role: "user", parts: [{ text: prompt }] }],
+                            generationConfig: { temperature: 0.7 }
+                        });
+                        return result.response.text();
+                    } catch (fallbackErr) {
+                        console.error(`⚠️ Fallback also failed:`, fallbackErr.message);
+                        throw fallbackErr;
+                    }
                 }
             }
             throw innerErr;
@@ -126,7 +132,7 @@ router.post('/chat', auth, async (req, res) => {
             if (e.message === 'API_KEY_MISSING') {
                 res.json({ reply: "I'm currently in **Demonstration Mode**. To enable my full AI capabilities, please ensure the `GEMINI_API_KEY` is set in the server environment settings." });
             } else {
-                res.json({ reply: "I'm currently having trouble connecting to my central brain. Let me try to help based on my local knowledge: Consistency is the key to mastering any subject. Try breaking your current focus into 15-minute sprints!" });
+                res.json({ reply: "I'm experiencing high traffic right now, but here's a quick productivity tip: Try using the Pomodoro technique (25 mins work, 5 mins break) to maintain focus and avoid burnout!" });
             }
         }
     } catch (err) {
