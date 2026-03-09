@@ -5,7 +5,7 @@ import API, { getUpcoming, getHabits, toggleHabit } from '../services/api';
 import {
     BookOpen, Calendar, CheckCircle, AlertTriangle, TrendingUp, Clock,
     Award, Timer, GraduationCap, BookMarked, Code2, Users, ClipboardList,
-    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote, Check, Activity, Circle, CheckCircle2
+    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote, Check, Activity, Circle, CheckCircle2, Bot
 } from 'lucide-react';
 
 // ---------- helpers ----------
@@ -238,6 +238,23 @@ const DashboardPage = () => {
                     </div>
                 ))}
             </div>
+
+            {/* AI Smart Suggestion Banner */}
+            {urgentCount > 0 && (
+                <div className="glass-card fade-up" style={{ marginBottom: '1.5rem', padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'linear-gradient(90deg, rgba(236,72,153,0.1), rgba(139,92,246,0.05))', borderLeft: '4px solid #ec4899' }}>
+                    <div style={{ background: 'rgba(236,72,153,0.2)', padding: '0.5rem', borderRadius: '50%' }}>
+                        <Bot size={20} color="#ec4899" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.25rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            AI Smart Suggestion
+                        </h4>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-soft)', lineHeight: 1.5 }}>
+                            You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. I highly recommend heading to the <Link to="/focus-room" style={{ color: '#818cf8', fontWeight: 600 }}>Deep Focus Room</Link> to tackle {upcoming[0]?.title || 'your top priority'} right now.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <div className="dashboard-grid-hero" style={{ marginBottom: '1.25rem' }}>
 
@@ -480,7 +497,7 @@ const DashboardPage = () => {
             </div>
 
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
+        </div >
     );
 };
 

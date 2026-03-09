@@ -66,6 +66,10 @@ export const AuthProvider = ({ children }) => {
         axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
     };
 
+    const updateUserXP = (xp, level) => {
+        setUser(prev => ({ ...prev, xp, level }));
+    };
+
     const logout = () => {
         setUser(null);
         setToken(null);
@@ -74,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, loading, updateUserXP }}>
             {children}
         </AuthContext.Provider>
     );

@@ -210,4 +210,35 @@ router.post('/reset-password/:token', async (req, res) => {
     }
 });
 
+// @POST /api/auth/add-xp
+router.post('/add-xp', require('../middleware/auth'), async (req, res) => {
+    try {
+        const { xpToAdd } = req.body;
+        if (!xpToAdd || typeof xpToAdd !== 'number') {
+            return res.status(400).json({ message: 'Valid xpToAdd is required.' });
+        }
+
+        const user = await User.findById(req.userId).select('-password');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.xp = (user.xp || 0) + xpToAdd;
+
+        // Level up logic (rough curve: each level takes 100 * level XP)
+        const xpThreshold = user.level * 100;
+        let leveledUp = false;
+        if (user.xp >= xpThreshold) {
+            user.level += 1;
+            user.xp = user.xp - xpThreshold;
+            leveledUp = true;
+        }
+
+        await user.save();
+
+        res.json({ xp: user.xp, level: user.level, leveledUp });
+    } catch (err) {
+        console.error('ADD XP ERROR:', err.message);
+        res.status(500).json({ message: 'Server error.', error: err.message });
+    }
+});
+
 module.exports = router;

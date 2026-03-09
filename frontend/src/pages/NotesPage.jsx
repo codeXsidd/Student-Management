@@ -94,10 +94,13 @@ const NotesPage = () => {
 
             {/* Quick add bar */}
             {!showForm && (
-                <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'text', border: '1px dashed rgba(99,102,241,0.25)' }}
-                    onClick={() => setShowForm(true)}>
-                    <Plus size={16} color="#64748b" />
-                    <span style={{ color: '#64748b', fontSize: '0.88rem' }}>Type a quick note...</span>
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <div className="glass-card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'text', border: '1px dashed rgba(99,102,241,0.25)' }}
+                        onClick={() => setShowForm(true)}>
+                        <Plus size={16} color="#64748b" />
+                        <span style={{ color: '#64748b', fontSize: '0.88rem' }}>Type a quick note...</span>
+                    </div>
+                    <p style={{ fontSize: '0.72rem', color: '#64748b', textAlign: 'center', marginTop: 10 }}>💡 Tip: Type <span style={{ color: '#818cf8', fontWeight: 600 }}>Q: Question \nA: Answer</span> to create an interactive flashcard.</p>
                 </div>
             )}
 
@@ -172,8 +175,19 @@ const NotesPage = () => {
 };
 
 const NoteCard = ({ note, editId, editContent, setEditId, setEditContent, saveEdit, togglePin, deleteNote }) => {
+    const [flipped, setFlipped] = useState(false);
     const cs = getColorStyle(note.color);
     const isEditing = editId === note._id;
+
+    // Detect Flashcard Format: "Q: ...\nA: ..."
+    const isFlashcard = note.content && note.content.startsWith('Q:') && note.content.includes('\nA:');
+    let qText = '', aText = '';
+    if (isFlashcard) {
+        const parts = note.content.split('\nA:');
+        qText = parts[0].substring(2).trim();
+        aText = parts[1].trim();
+    }
+
     return (
         <div className="fade-in" style={{
             background: cs.bg, border: `1px solid ${cs.border}`, borderRadius: 12,
@@ -208,17 +222,52 @@ const NoteCard = ({ note, editId, editContent, setEditId, setEditContent, saveEd
                         <button onClick={() => saveEdit(note._id)} style={{ flex: 1, padding: '0.3rem', borderRadius: 6, background: cs.value, border: 'none', color: 'white', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600 }}>Save</button>
                     </div>
                 </div>
+            ) : isFlashcard ? (
+                <div onClick={() => setFlipped(!flipped)} style={{
+                    cursor: 'pointer', perspective: '1000px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '80px'
+                }}>
+                    <div style={{
+                        width: '100%', transition: 'transform 0.6s', transformStyle: 'preserve-3d', position: 'relative',
+                        transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                    }}>
+                        {/* Front (Question) */}
+                        <div style={{
+                            backfaceVisibility: 'hidden', position: flipped ? 'absolute' : 'relative',
+                            top: 0, left: 0, width: '100%', color: '#e2e8f0', fontSize: '0.9rem', fontWeight: 600, padding: '0.5rem 0'
+                        }}>
+                            <span style={{ fontSize: '0.7rem', color: cs.value, textTransform: 'uppercase', display: 'block', marginBottom: 4, letterSpacing: '0.05em' }}>Question</span>
+                            {qText}
+                        </div>
+                        {/* Back (Answer) */}
+                        <div style={{
+                            backfaceVisibility: 'hidden', position: flipped ? 'relative' : 'absolute',
+                            top: 0, left: 0, width: '100%', color: '#10b981', fontSize: '0.85rem', transform: 'rotateY(180deg)', padding: '0.5rem 0'
+                        }}>
+                            <span style={{ fontSize: '0.7rem', color: '#10b981', textTransform: 'uppercase', display: 'block', marginBottom: 4, letterSpacing: '0.05em' }}>Answer</span>
+                            {aText}
+                        </div>
+                    </div>
+                </div>
             ) : (
                 <p onClick={() => { setEditId(note._id); setEditContent(note.content); }} style={{
                     fontSize: '0.83rem', color: '#e2e8f0', lineHeight: 1.6, cursor: 'text',
-                    whiteSpace: 'pre-wrap', wordBreak: 'break-word'
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1
                 }}>{note.content}</p>
             )}
 
-            {/* Date */}
-            <p style={{ fontSize: '0.62rem', color: '#475569', marginTop: 8, textAlign: 'right' }}>
-                {new Date(note.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-            </p>
+            {/* Bottom area */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                <div>
+                    {isFlashcard && !isEditing && (
+                        <button onClick={(e) => { e.stopPropagation(); setEditId(note._id); setEditContent(note.content); }} style={{
+                            background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '0.7rem', textDecoration: 'underline', padding: 0
+                        }}>Edit</button>
+                    )}
+                </div>
+                <p style={{ fontSize: '0.62rem', color: '#475569', textAlign: 'right' }}>
+                    {new Date(note.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                </p>
+            </div>
         </div>
     );
 };

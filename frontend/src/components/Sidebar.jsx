@@ -5,7 +5,7 @@ import API from '../services/api';
 import {
     BookOpen, LayoutDashboard, Users, ClipboardList, CheckSquare,
     Award, Timer, GraduationCap, Calendar, BookMarked, Code2,
-    StickyNote, Target, Bell, LogOut, ChevronLeft, ChevronRight, Sparkles, Activity
+    StickyNote, Target, Bell, LogOut, ChevronLeft, ChevronRight, Sparkles, Activity, Zap, TrendingUp
 } from 'lucide-react';
 
 const mainLinks = [
@@ -20,6 +20,7 @@ const workspaceLinks = [
 ];
 
 const performanceLinks = [
+    { to: '/analytics', icon: <TrendingUp size={18} />, label: 'Analytics' },
     { to: '/gpa', icon: <GraduationCap size={18} />, label: 'GPA Calculator' },
     { to: '/certificates', icon: <Award size={18} />, label: 'Certificates' },
     { to: '/portfolio', icon: <Code2 size={18} />, label: 'Portfolio' },
@@ -27,6 +28,7 @@ const performanceLinks = [
 
 const productivityLinks = [
     { to: '/pomodoro', icon: <Timer size={18} />, label: 'Pomodoro' },
+    { to: '/focus-room', icon: <Zap size={18} />, label: 'Deep Focus Room' },
     { to: '/journal', icon: <BookMarked size={18} />, label: 'Study Journal' },
     { to: '/notes', icon: <StickyNote size={18} />, label: 'Notes Wall' },
     { to: '/habits', icon: <Activity size={18} />, label: 'Habit Builder' },
@@ -106,7 +108,19 @@ const Sidebar = () => {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
-                            <p style={{ fontSize: '0.65rem', color: '#818cf8', fontWeight: 600 }}>Personal Workspace</p>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2, marginBottom: 4 }}>
+                                <span style={{ fontSize: '0.65rem', color: '#818cf8', fontWeight: 700 }}>Lvl {user?.level || 1}</span>
+                                <span style={{ fontSize: '0.6rem', color: '#64748b' }}>{user?.xp || 0} / {(user?.level || 1) * 100} XP</span>
+                            </div>
+                            {/* XP Progress Bar */}
+                            <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                                <div style={{
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, #6366f1, #ec4899)',
+                                    width: `${Math.min(((user?.xp || 0) / ((user?.level || 1) * 100)) * 100, 100)}%`,
+                                    transition: 'width 0.3s'
+                                }} />
+                            </div>
                         </div>
                     </div>
                 </div>
