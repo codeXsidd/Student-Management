@@ -197,7 +197,7 @@ const DashboardPage = () => {
     const dashboardTodos = todos.filter(t => t.dayPlan && !t.completed);
 
     return (
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.5rem 1.5rem' }}>
+        <div className="page-container animate-slide-scale">
 
             {/* ── HERO HEADER ── */}
             <div style={{
@@ -238,13 +238,13 @@ const DashboardPage = () => {
             </div>
 
             {/* ── KEY STATS ROW ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.85rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 {[
-                    { label: 'Deadlines This Week', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent` },
+                    { label: 'Upcoming Deadlines', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent` },
                     { label: 'Study Streak', value: streak > 0 ? `🔥 ${streak}d` : '—', color: '#ef4444', icon: <Flame size={18} />, sub: streak > 0 ? 'Keep it up!' : 'Start journaling!' },
                     { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!' }
-                ].map(s => (
-                    <div key={s.label} className="glass-card fade-in" style={{ padding: '1rem', borderLeft: `3px solid ${s.color}` }}>
+                ].map((s, idx) => (
+                    <div key={s.label} className="glass-card" style={{ padding: '1.25rem', borderLeft: `4px solid ${s.color}`, animationDelay: `${idx * 0.1}s` }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</p>
                             <div style={{ color: s.color, opacity: 0.7 }}>{s.icon}</div>
@@ -257,23 +257,23 @@ const DashboardPage = () => {
 
             {/* AI Smart Suggestion Banner */}
             {(urgentCount > 0 || aiInsight) && (
-                <div className="glass-card fade-up" style={{ marginBottom: '1.5rem', padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'linear-gradient(90deg, rgba(236,72,153,0.1), rgba(139,92,246,0.05))', borderLeft: '4px solid #ec4899', position: 'relative' }}>
-                    <div style={{ background: 'rgba(236,72,153,0.2)', padding: '0.5rem', borderRadius: '50%' }}>
-                        <Bot size={20} color="#ec4899" />
+                <div className="glass-card" style={{ marginBottom: '1.5rem', padding: '1.5rem', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', background: 'linear-gradient(90deg, rgba(236,72,153,0.1), rgba(139,92,246,0.05))', borderLeft: '4px solid #ec4899', position: 'relative' }}>
+                    <div className="float" style={{ background: 'rgba(236,72,153,0.2)', padding: '0.6rem', borderRadius: '50%', flexShrink: 0 }}>
+                        <Bot size={24} color="#ec4899" />
                     </div>
                     <div style={{ flex: 1 }}>
-                        <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.25rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.5rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 6 }}>
                             AI Smart Suggestion
                         </h4>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-soft)', lineHeight: 1.5 }}>
+                        <p style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6 }}>
                             {aiInsight || (
-                                <>You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. I highly recommend heading to the <Link to="/focus-room" style={{ color: '#818cf8', fontWeight: 600 }}>Deep Focus Room</Link> to tackle {upcoming[0]?.title || 'your top priority'} right now.</>
+                                <>You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. I highly recommend heading to the <Link to="/focus-room" style={{ color: '#a78bfa', fontWeight: 700 }}>Deep Focus Room</Link> to tackle {upcoming[0]?.title || 'your top priority'} right now.</>
                             )}
                         </p>
                     </div>
-                    <button onClick={fetchAiInsight} disabled={insightLoading} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ec4899', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', fontWeight: 600 }}>
+                    <button onClick={fetchAiInsight} disabled={insightLoading} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ec4899', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
                         <RotateCcw size={14} style={{ animation: insightLoading ? 'spin 1s linear infinite' : 'none' }} />
-                        Refresh
+                        REFRESH
                     </button>
                 </div>
             )}

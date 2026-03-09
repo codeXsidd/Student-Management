@@ -56,15 +56,19 @@ const Sidebar = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                 {links.map(link => (
                     <Link key={link.to} to={link.to} title={collapsed ? link.label : ''} style={{
-                        display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.75rem',
-                        borderRadius: '10px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600,
+                        display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.75rem',
+                        borderRadius: '12px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600,
                         background: isActive(link.to) ? 'rgba(99,102,241,0.12)' : 'transparent',
-                        color: isActive(link.to) ? '#818cf8' : '#94a3b8',
+                        color: isActive(link.to) ? '#a78bfa' : '#94a3b8',
                         border: isActive(link.to) ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent',
-                        transition: 'all 0.15s ease'
+                        transition: 'var(--transition)',
+                        position: 'relative'
                     }} onMouseEnter={e => !isActive(link.to) && (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')} onMouseLeave={e => !isActive(link.to) && (e.currentTarget.style.background = 'transparent')}>
                         {link.icon}
                         {!collapsed && <span>{link.label}</span>}
+                        {isActive(link.to) && (
+                            <div style={{ position: 'absolute', right: '0.75rem', width: 4, height: 4, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 8px #a78bfa' }} />
+                        )}
                     </Link>
                 ))}
             </div>
@@ -93,9 +97,14 @@ const Sidebar = () => {
                 )}
                 <button onClick={() => setCollapsed(!collapsed)} style={{
                     background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: collapsed ? 0 : 4
-                }}>
-                    {collapsed ? <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BookOpen size={18} color="white" /></div> : <ChevronLeft size={18} />}
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: collapsed ? 0 : 4,
+                    transition: 'var(--transition)'
+                }} onMouseEnter={e => e.currentTarget.style.color = '#818cf8'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
+                    {collapsed ? (
+                        <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.3)', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.transform = 'rotate(12deg) scale(1.1)'} onMouseLeave={e => e.currentTarget.style.transform = 'rotate(0) scale(1)'}>
+                            <BookOpen size={20} color="white" />
+                        </div>
+                    ) : <ChevronLeft size={20} />}
                 </button>
             </div>
 
@@ -155,34 +164,36 @@ const Sidebar = () => {
                         left: 0;
                         right: 0;
                         width: 100% !important;
-                        height: 60px !important;
+                        height: 70px !important;
                         flex-direction: row !important;
                         border-right: none !important;
-                        border-top: 1px solid rgba(99,102,241,0.12);
+                        border-top: 1px solid rgba(99,102,241,0.15);
+                        background: rgba(8, 8, 18, 0.9) !important;
+                        backdrop-filter: blur(20px) !important;
                         z-index: 999;
                         overflow-x: auto;
-                        padding: 0.2rem 1rem !important;
+                        padding: 0 0.5rem !important;
                         white-space: nowrap;
+                        box-shadow: 0 -10px 25px rgba(0,0,0,0.5);
                     }
                     .hide-mobile { display: none !important; }
                     .sidebar-header, .sidebar-user { display: none !important; }
                     
-                    /* Flatten logic for links */
                     aside > div.hide-scrollbar {
                         display: flex !important;
                         flex-direction: row !important;
                         padding: 0 !important;
-                        gap: 0.1rem;
+                        gap: 0.25rem;
                         align-items: center;
                         height: 100%;
                         justify-content: flex-start;
                         min-width: min-content;
-                        flex: none !important;
+                        flex: 1 !important;
                     }
                     aside div.hide-scrollbar > div {
                         margin: 0 !important;
                         display: flex;
-                        gap: 0.1rem;
+                        gap: 0.25rem;
                     }
                     aside div.hide-scrollbar > div > p {
                         display: none !important;
@@ -192,16 +203,19 @@ const Sidebar = () => {
                         gap: 0.25rem !important;
                     }
                     aside a, aside button {
-                        padding: 0.6rem 0.8rem !important;
-                        border-radius: 99px !important;
-                        height: max-content;
+                        padding: 0.75rem 1rem !important;
+                        border-radius: 14px !important;
+                        height: 50px !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
                     }
+                    aside a div { display: none !important; } /* Hide indicators on mobile */
                     
-                    /* Render Bottom Actions Inline */
                     .sidebar-bottom {
                         display: flex !important;
                         flex-direction: row !important;
-                        padding: 0 0.5rem !important;
+                        padding: 0 0.25rem !important;
                         border-top: none !important;
                         align-items: center;
                         gap: 0.25rem;

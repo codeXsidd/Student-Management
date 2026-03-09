@@ -102,20 +102,24 @@ const PomodoroPage = () => {
     const circumference = 2 * Math.PI * 110;
 
     return (
-        <div style={{ maxWidth: 700, margin: '0 auto', padding: '2rem 1.5rem' }}>
-            <div className="section-title" style={{ justifyContent: 'center', textAlign: 'center' }}>
-                <Timer size={24} color="#6366f1" /> Pomodoro Study Timer
+        <div className="page-container animate-slide-scale">
+            <div className="section-title" style={{ justifyContent: 'center', textAlign: 'center', marginBottom: '2.5rem' }}>
+                <Timer size={30} color="#6366f1" /> Pomodoro Study Timer
             </div>
 
             {/* Mode Tabs */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 {MODES.map((m, i) => (
                     <button key={i} onClick={() => switchMode(i)} style={{
-                        display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 1.1rem',
-                        borderRadius: 25, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
-                        background: modeIdx === i ? m.color : 'rgba(99,102,241,0.1)',
-                        border: modeIdx === i ? 'none' : '1px solid rgba(99,102,241,0.2)',
-                        color: modeIdx === i ? 'white' : '#94a3b8', transition: 'all 0.2s'
+                        display: 'flex', alignItems: 'center', gap: 8, padding: '0.6rem 1.25rem',
+                        borderRadius: 30, cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
+                        background: modeIdx === i ? m.color : 'rgba(99,102,241,0.05)',
+                        border: '1px solid',
+                        borderColor: modeIdx === i ? 'transparent' : 'rgba(99,102,241,0.2)',
+                        color: modeIdx === i ? 'white' : '#94a3b8',
+                        transition: 'var(--transition)',
+                        transform: modeIdx === i ? 'scale(1.05)' : 'scale(1)',
+                        boxShadow: modeIdx === i ? `0 4px 15px ${m.color}66` : 'none'
                     }}>
                         {m.icon} {m.label}
                     </button>
@@ -123,43 +127,43 @@ const PomodoroPage = () => {
             </div>
 
             {/* Circular Timer */}
-            <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ position: 'relative', width: 260, height: 260, margin: '0 auto 2rem' }}>
-                    <svg width="260" height="260" style={{ transform: 'rotate(-90deg)', position: 'absolute', top: 0, left: 0 }}>
+            <div className={`glass-card ${running ? 'glow-anim' : ''}`} style={{ padding: '3.5rem 2.5rem', textAlign: 'center', marginBottom: '2rem', background: running ? 'rgba(99,102,241,0.03)' : 'var(--bg-card)' }}>
+                <div style={{ position: 'relative', width: 280, height: 280, margin: '0 auto 2.5rem' }}>
+                    <svg width="280" height="280" style={{ transform: 'rotate(-90deg)', position: 'absolute', top: 0, left: 0 }}>
                         {/* Background circle */}
-                        <circle cx="130" cy="130" r="110" fill="none" stroke="rgba(99,102,241,0.1)" strokeWidth="10" />
+                        <circle cx="140" cy="140" r="120" fill="none" stroke="rgba(99,102,241,0.08)" strokeWidth="12" />
                         {/* Progress circle */}
-                        <circle cx="130" cy="130" r="110" fill="none"
-                            stroke={mode.color} strokeWidth="10"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={circumference - (progress / 100) * circumference}
+                        <circle cx="140" cy="140" r="120" fill="none"
+                            stroke={mode.color} strokeWidth="12"
+                            strokeDasharray={754}
+                            strokeDashoffset={754 - (progress / 100) * 754}
                             strokeLinecap="round"
-                            style={{ transition: 'stroke-dashoffset 1s linear', filter: `drop-shadow(0 0 8px ${mode.color}66)` }}
+                            style={{ transition: 'stroke-dashoffset 1s linear', filter: `drop-shadow(0 0 12px ${mode.color}88)` }}
                         />
                     </svg>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
-                        <div style={{ fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-2px', fontVariantNumeric: 'tabular-nums', color: mode.color }}>
+                        <div style={{ fontSize: '4.5rem', fontWeight: 900, letterSpacing: '-3px', fontVariantNumeric: 'tabular-nums', color: mode.color, textShadow: `0 0 15px ${mode.color}44` }}>
                             {mins}:{secs}
                         </div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 4 }}>{mode.label}</p>
+                        <p style={{ color: 'var(--text-soft)', fontSize: '1rem', fontWeight: 700, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{mode.label}</p>
                     </div>
                 </div>
 
                 {/* Controls */}
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.5rem' }}>
-                    <button onClick={reset} style={{
-                        width: 48, height: 48, borderRadius: '50%', border: '1px solid rgba(99,102,241,0.3)',
-                        background: 'rgba(99,102,241,0.1)', cursor: 'pointer', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+                    <button onClick={reset} className="glass-card" style={{
+                        width: 56, height: 56, borderRadius: '50%', border: '1px solid rgba(99,102,241,0.3)',
+                        background: 'rgba(99,102,241,0.05)', cursor: 'pointer', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                        <RotateCcw size={18} />
+                        <RotateCcw size={22} />
                     </button>
                     <button onClick={() => { requestNotification(); setRunning(!running); }} style={{
-                        width: 72, height: 72, borderRadius: '50%', border: 'none',
+                        width: 84, height: 84, borderRadius: '50%', border: 'none',
                         background: `linear-gradient(135deg, ${mode.color}, ${mode.color}cc)`,
                         cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: `0 4px 20px ${mode.color}55`, fontSize: '1.1rem'
-                    }}>
-                        {running ? <Pause size={28} /> : <Play size={28} style={{ marginLeft: 3 }} />}
+                        boxShadow: `0 8px 32px ${mode.color}77`, transition: 'var(--transition)'
+                    }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                        {running ? <Pause size={36} fill="white" /> : <Play size={36} fill="white" style={{ marginLeft: 6 }} />}
                     </button>
                 </div>
             </div>

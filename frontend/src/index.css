@@ -10,12 +10,16 @@
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --bg: #070711;
-  --bg-card: rgba(18, 18, 32, 0.9);
-  --border: rgba(99, 102, 241, 0.12);
-  --text: #e2e8f0;
+  --bg: #03030b;
+  --bg-card: rgba(18, 18, 32, 0.7);
+  --border: rgba(99, 102, 241, 0.15);
+  --text: #f8fafc;
   --text-muted: #64748b;
   --text-soft: #94a3b8;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -64,12 +68,21 @@ body {
 
 /* ── Glass card ── */
 .glass-card {
-  background: rgba(18, 18, 32, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: var(--transition);
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
 
 /* ── Gradient text ── */
@@ -138,6 +151,22 @@ body {
   100% {
     background-position: 200% 0;
   }
+}
+
+@keyframes slideScale {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-slide-scale {
+  animation: slideScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes pulse-ring {
@@ -465,10 +494,18 @@ textarea {
 
   /* Prevent bottom nav overlay from blocking content */
   .main-content {
-    padding-bottom: 90px !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding-bottom: 100px !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
     padding-top: 1rem !important;
+  }
+
+  .sidebar-mobile-only {
+    display: flex !important;
+  }
+
+  .sidebar-desktop-only {
+    display: none !important;
   }
 
   .page-container {
