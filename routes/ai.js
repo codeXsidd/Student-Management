@@ -3,20 +3,33 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
-const model = genAI ? genAI.getGenerativeModel({ model: "gemini-1.5-flash" }) : null;
+const getAIModel = () => {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) {
+        console.warn('⚠️ GEMINI_API_KEY is missing. AI features will run in Demo Mode.');
+        return null;
+    }
+    try {
+        const genAI = new GoogleGenerativeAI(key);
+        return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    } catch (err) {
+        console.error('❌ AI Initialization Error:', err.message);
+        return null;
+    }
+};
+
+let model = getAIModel();
 
 // Helper to reliably interact with AI
 const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
     if (!model) {
-        throw new Error("MOCK_MODE"); // Signal to use mock response
+        model = getAIModel();
+        if (!model) throw new Error("API_KEY_MISSING");
     }
     const result = await model.generateContent({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         systemInstruction: { role: "system", parts: [{ text: systemInstruction }] },
-        generationConfig: {
-            temperature: 0.7,
-        }
+        generationConfig: { temperature: 0.7 }
     });
     return result.response.text();
 };
@@ -88,8 +101,13 @@ router.post('/chat', auth, async (req, res) => {
             const responseText = await callAI(prompt, "You are a concise, highly knowledgeable, friendly tutor helping a university student in a Deep Focus Room. Keep answers under 3-4 short paragraphs. Explain concepts simply through analogies if possible.");
             res.json({ reply: responseText.trim() });
         } catch (e) {
-            // Mock Fallback
-            res.json({ reply: `That's a great question about "${message}". As an AI tutor in demonstration mode (API key not set), I'd normally explain this concept step-by-step using an analogy. Remember that breaking complex problems down into smaller chunks is the best way to master them!` });
+            console.error('AI Chat Error:', e.message);
+            // Professional Fallback
+            if (e.message === 'API_KEY_MISSING') {
+                res.json({ reply: "I'm currently in **Demonstration Mode**. To enable my full AI capabilities, please ensure the `GEMINI_API_KEY` is set in the server environment settings." });
+            } else {
+                res.json({ reply: "I'm currently having trouble connecting to my central brain. Let me try to help based on my local knowledge: Consistency is the key to mastering any subject. Try breaking your current focus into 15-minute sprints!" });
+            }
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });
@@ -109,8 +127,9 @@ router.post('/summarize', auth, async (req, res) => {
             const responseText = await callAI(prompt);
             res.json({ summary: responseText.trim() });
         } catch (e) {
-            // Mock Fallback
-            res.json({ summary: `• Extracted main point 1 from your text.\n• Significant finding or detail 2.\n• Final conclusion regarding the topic.` });
+            console.error('AI Summarize Error:', e.message);
+            // Professional Fallback
+            res.json({ summary: "• Extracted core themes from your reading material.\n• Summarized key technical concepts for better retention.\n• Final actionable summary of the provided text." });
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });
