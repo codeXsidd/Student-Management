@@ -55,8 +55,45 @@ export const updateHabit = (id, data) => API.put(`/habits/${id}`, data);
 export const deleteHabit = (id) => API.delete(`/habits/${id}`);
 export const toggleHabit = (id, date) => API.post(`/habits/${id}/toggle`, { date });
 
-// AI Productivity
-export const breakDownTask = (data) => API.post('/ai/breakdown', data);
-export const generateFlashcards = (data) => API.post('/ai/flashcards', data);
-export const aiChat = (data) => API.post('/ai/chat', data);
-export const summarizeText = (data) => API.post('/ai/summarize', data);
+// AI Productivity (Puter.js Full Free Mode)
+const callPuterAI = async (prompt) => {
+    if (window.puter && window.puter.ai) {
+        const resp = await window.puter.ai.chat(prompt);
+        return resp.toString();
+    }
+    throw new Error("Puter not loaded");
+};
+
+export const breakDownTask = async (data) => {
+    try {
+        const prompt = `Break down this student goal into 3-5 subtasks with durations:\n"${data.taskTitle}"\nReturn ONLY a JSON array like: [{"title":"Step", "duration":"30m"}]`;
+        const res = await callPuterAI(prompt);
+        const json = JSON.parse(res.replace(/```json/g, '').replace(/```/g, '').trim());
+        return { data: json };
+    } catch { return API.post('/ai/breakdown', data); }
+};
+
+export const generateFlashcards = async (data) => {
+    try {
+        const prompt = `Turn these study notes into 2 to 4 interactive flashcards:\n"${data.noteContent}"\nReturn ONLY a JSON array: [{"q":"What is...", "a":"Answer"}]`;
+        const res = await callPuterAI(prompt);
+        const json = JSON.parse(res.replace(/```json/g, '').replace(/```/g, '').trim());
+        return { data: json };
+    } catch { return API.post('/ai/flashcards', data); }
+};
+
+export const aiChat = async (data) => {
+    try {
+        const prompt = `Student says: "${data.message}"\nContext: ${data.context || 'General study help'}\n\nYou are a friendly AI tutor in a Deep Focus Room. Explains things simply.`;
+        const res = await callPuterAI(prompt);
+        return { data: { reply: res } };
+    } catch { return API.post('/ai/chat', data); }
+};
+
+export const summarizeText = async (data) => {
+    try {
+        const prompt = `Summarize this text into 3-5 bullet points:\n"${data.text}"`;
+        const res = await callPuterAI(prompt);
+        return { data: { summary: res } };
+    } catch { return API.post('/ai/summarize', data); }
+};
