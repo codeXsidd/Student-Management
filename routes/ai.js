@@ -26,7 +26,7 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
     const models = [
         "gemini-1.5-flash",
         "gemini-1.5-pro",
-        "gemini-pro"
+        "gemini-2.0-flash"  // ← optional: add newer model
     ];
 
     let lastError = null;
@@ -184,7 +184,7 @@ router.post('/chat', auth, async (req, res) => {
             if (e.message === 'API_KEY_MISSING') {
                 res.json({ reply: "I'm currently in **Demonstration Mode**. To enable my full AI capabilities, please ensure the `GEMINI_API_KEY` is set in the Render environment variables." });
             } else {
-                res.json({ reply: `I'm having trouble connecting to my central brain. Error: ${e.message}. Please verify your API key and region settings on Render.` });
+                res.json({ reply: "I'm having trouble connecting right now. Please try again in a moment." });
             }
         }
     } catch (err) {
