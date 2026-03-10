@@ -3,11 +3,11 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const getAIModel = (modelName, key) => {
+const getAIModel = (modelName, key, version = 'v1') => {
     try {
         const genAI = new GoogleGenerativeAI(key);
-        // FORCE stable v1 to avoid the v1beta 404 errors shown in logs
-        return genAI.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
+        // Default to v1, but allow v1beta as fallback for older models if needed
+        return genAI.getGenerativeModel({ model: modelName }, { apiVersion: version });
     } catch (err) {
         return null;
     }
@@ -17,58 +17,70 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
     let key = process.env.GEMINI_API_KEY;
     if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
 
-    // Aggressive cleaning to remove quotes or erratic whitespace from paste errors
+    // Aggressive cleaning to remove quotes or erratic whitespace
     key = key.trim().replace(/^["']|["']$/g, '');
 
     const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
 
-    // Prioritized list: 1.5-flash is the most widely available stable model
+    // Valid model names for the current Gemini API
     const models = [
         "gemini-1.5-flash",
         "gemini-1.5-pro",
-        "gemini-1.0-pro"
+        "gemini-pro"
     ];
 
     let lastError = null;
 
-    for (const m of models) {
-        // We try both standard and prefixed to cover all SDK possibilities
-        const variants = [m, `models/${m}`];
+    // Try each model
+    for (const modelName of models) {
+        try {
+            console.log(`🤖 AI Attempt: ${modelName} (v1)`);
+            const activeModel = getAIModel(modelName, key, 'v1');
+            if (!activeModel) continue;
 
-        for (const variant of variants) {
-            try {
-                console.log(`🤖 AI Attempt: ${variant} (v1)`);
-                const activeModel = getAIModel(variant, key);
-                if (!activeModel) continue;
+            const result = await activeModel.generateContent(fullPrompt);
+            const response = await result.response;
+            const text = response.text();
 
-                const result = await activeModel.generateContent(fullPrompt);
-                const response = await result.response;
-                const text = response.text();
-
-                if (text) {
-                    console.log(`✅ AI Success: ${variant}`);
-                    return text;
-                }
-            } catch (err) {
-                lastError = err;
-                console.warn(`⚠️ Model ${variant} failed:`, err.message);
-
-                // If the key specifically is invalid, no point in trying other models
-                if (err.message.toLowerCase().includes('api key not valid') ||
-                    err.message.toLowerCase().includes('apikey_invalid')) {
-                    throw new Error("The API Key provided in Render appears to be invalid. Please check for extra spaces or incorrect characters.");
-                }
-
-                // If it's a model not found error (404), we continue to the next fallback
-                continue;
+            if (text) {
+                console.log(`✅ AI Success: ${modelName}`);
+                return text.trim();
             }
+        } catch (err) {
+            lastError = err;
+            console.warn(`⚠️ Model ${modelName} failed on v1:`, err.message);
+
+            // If the key specifically is invalid, no point in trying other models
+            if (err.message.toLowerCase().includes('api key') ||
+                err.message.toLowerCase().includes('apikey_invalid')) {
+                throw new Error("The API Key provided in Render appears to be invalid. Please check for extra spaces or incorrect characters.");
+            }
+
+            // If it's a 404 or unsupported on v1, we might try it once more on v1beta for robustness
+            if (err.message.includes('404') || err.message.includes('not found')) {
+                try {
+                    console.log(`🔄 AI Retry: ${modelName} (v1beta)`);
+                    const betaModel = getAIModel(modelName, key, 'v1beta');
+                    const betaResult = await betaModel.generateContent(fullPrompt);
+                    const betaResponse = await betaResult.response;
+                    const betaText = betaResponse.text();
+                    if (betaText) {
+                        console.log(`✅ AI Success: ${modelName} (v1beta)`);
+                        return betaText.trim();
+                    }
+                } catch (betaErr) {
+                    console.warn(`⚠️ Model ${modelName} also failed on v1beta:`, betaErr.message);
+                }
+            }
+            // Continue to next model if this one failed
+            continue;
         }
     }
 
     // Comprehensive error if everything failed
     console.error("❌ CRITICAL: ALL AI MODELS FAILED.");
     const finalErrorMessage = lastError ? lastError.message : "Connection failed to all Gemini models.";
-    throw new Error(`${finalErrorMessage}. (Check that your API key is correct and your Render region has access to Google AI)`);
+    throw new Error(`${finalErrorMessage}. (Check your API key and region settings)`);
 };
 
 // Helper to extract JSON from AI response safely
@@ -179,6 +191,7 @@ router.post('/chat', auth, async (req, res) => {
         res.status(500).json({ message: "AI Error", error: err.message });
     }
 });
+
 
 
 // 4. Summarizer
