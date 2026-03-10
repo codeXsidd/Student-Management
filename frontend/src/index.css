@@ -215,6 +215,19 @@ body {
   animation: glow-pulse 2s ease-in-out infinite;
 }
 
+/* ── Chat bubbles ── */
+.chat-bubble-user {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15)) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1);
+}
+
+.chat-bubble-assistant {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
 /* ── Inputs ── */
 .input {
   width: 100%;
@@ -457,7 +470,7 @@ textarea {
 
 .dashboard-grid-hero {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.25rem;
 }
 

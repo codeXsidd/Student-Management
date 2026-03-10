@@ -3,14 +3,6 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { GoogleGenAI } = require('@google/genai');
 
-const getAIModel = (key) => {
-    try {
-        return new GoogleGenAI({ apiKey: key });
-    } catch (err) {
-        return null;
-    }
-};
-
 const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
     let key = process.env.GEMINI_API_KEY;
     if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
@@ -18,13 +10,11 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
     // Aggressive cleaning to remove quotes or erratic whitespace
     key = key.trim().replace(/^["']|["']$/g, '');
 
-    const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
+    const ai = new GoogleGenAI({ apiKey: key });
 
-    // Valid model names for the current Gemini API
+    // We prioritize gemini-3-flash-preview as requested, with fallbacks to stable models
     const models = [
         "gemini-3-flash-preview",
-        "gemini-3.1-flash",
-        "gemini-3.1-pro",
         "gemini-2.0-flash",
         "gemini-1.5-flash",
         "gemini-1.5-pro"
@@ -32,36 +22,30 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
 
     let lastError = null;
 
-    // Try each model
     for (const modelName of models) {
         try {
             console.log(`🤖 AI Attempt: ${modelName}`);
-            const ai = getAIModel(key);
-            if (!ai) continue;
-
+            
             const response = await ai.models.generateContent({
                 model: modelName,
                 systemInstruction: systemInstruction,
                 contents: prompt
             });
 
-            const text = response.text;
-
-            if (text) {
+            if (response && response.text) {
                 console.log(`✅ AI Success: ${modelName}`);
-                return text.trim();
+                return response.text.trim();
             }
         } catch (err) {
             lastError = err;
             console.warn(`⚠️ Model ${modelName} failed:`, err.message);
 
-            // If the key specifically is invalid, no point in trying other models
-            if (err.message.toLowerCase().includes('api key') ||
-                err.message.toLowerCase().includes('apikey_invalid')) {
-                throw new Error("The API Key provided appears to be invalid. Please check for extra spaces or incorrect characters.");
+            // If it's an API key error, don't bother with other models
+            if (err.message.toLowerCase().includes('api key') || 
+                err.message.toLowerCase().includes('invalid')) {
+                throw new Error("Invalid API Key. Please check your GEMINI_API_KEY in the environment settings.");
             }
             
-            // Continue to next model if this one failed
             continue;
         }
     }

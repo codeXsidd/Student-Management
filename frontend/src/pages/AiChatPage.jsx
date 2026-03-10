@@ -177,10 +177,8 @@ const AiChatPage = () => {
                                 }}>
                                     {msg.role === 'user' ? <User size={16} color="#818cf8" /> : <Bot size={16} color="#10b981" />}
                                 </div>
-                                <div style={{
+                                <div className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'} style={{
                                     maxWidth: '85%', padding: '0.85rem 1.1rem', borderRadius: '18px',
-                                    background: msg.role === 'user' ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' : 'rgba(255,255,255,0.04)',
-                                    border: `1px solid ${msg.role === 'user' ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.08)'}`,
                                     borderTopRightRadius: msg.role === 'user' ? '4px' : '18px',
                                     borderTopLeftRadius: msg.role === 'user' ? '18px' : '4px',
                                 }}>
