@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target, Layout, BarChart, Settings } from 'lucide-react';
 import { aiChat } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -77,10 +77,12 @@ const AiChatPage = () => {
     };
 
     const samplePrompts = [
-        { title: "Explain a concept", text: "Explain the concept of 'Big O Notation' with a real-world analogy.", icon: <Brain size={16} /> },
-        { title: "Study Schedule", text: "I have 3 hours. Help me plan a study session for Math and Physics.", icon: <Clock size={16} /> },
-        { title: "Motivation", text: "Give me some motivation. I've been studying for 4 hours and feeling tired.", icon: <Zap size={16} /> },
-        { title: "Exam Prep", text: "How should I prepare for a multiple-choice exam coming up next week?", icon: <Target size={16} /> }
+        { title: "Explain a concept", text: "Explain the concept of 'Big O Notation' with a real-world analogy.", icon: <Brain size={16} />, color: '#6366f1' },
+        { title: "Study Schedule", text: "I have 3 hours. Help me plan a study session for Math and Physics.", icon: <Clock size={16} />, color: '#10b981' },
+        { title: "Productivity", text: "What are some best techniques to stay focused for long hours?", icon: <Zap size={16} />, color: '#f59e0b' },
+        { title: "Workspace", text: "How should I organize my desk for maximum performance?", icon: <Layout size={16} />, color: '#ec4899' },
+        { title: "Performance", text: "Give me tips to improve my academic performance and grades.", icon: <BarChart size={16} />, color: '#818cf8' },
+        { title: "Exam Prep", text: "How should I prepare for a multiple-choice exam coming up next week?", icon: <Target size={16} />, color: '#a78bfa' }
     ];
 
     return (
@@ -91,13 +93,26 @@ const AiChatPage = () => {
                 <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <MessageSquare size={16} /> AI Activity
                 </h3>
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }} className="hide-scrollbar">
-                    <div style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)' }}>
-                        <p style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>CURRENT STATUS</p>
-                        <p style={{ fontSize: '0.82rem', color: '#e2e8f0', lineHeight: 1.4 }}>Analyzing your study patterns to provide better suggestions.</p>
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }} className="hide-scrollbar">
+                    <div className="glass-card" style={{ padding: '1rem', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                        <p style={{ fontSize: '0.7rem', color: '#818cf8', fontWeight: 800, marginBottom: 4, textTransform: 'uppercase' }}>Current Insights</p>
+                        <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.5 }}>Deep work states take 20 mins to enter. Avoid small distractions!</p>
                     </div>
+                    
                     <div>
-                        <p style={{ fontSize: '0.7rem', color: '#475569', textAlign: 'center', marginTop: '1rem', fontStyle: 'italic' }}>More tools coming soon!</p>
+                        <p style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.75rem', paddingLeft: '0.5rem' }}>Topics to Explore</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {samplePrompts.map((p, i) => (
+                                <button key={i} onClick={() => suggest(p.text)} className="topic-btn" style={{
+                                    display: 'flex', alignItems: 'center', gap: 10, padding: '0.6rem 0.75rem', borderRadius: 10,
+                                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
+                                    color: '#94a3b8', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s'
+                                }}>
+                                    <div style={{ color: p.color }}>{p.icon}</div>
+                                    {p.title}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -127,20 +142,24 @@ const AiChatPage = () => {
                     {/* Messages */}
                     <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }} className="custom-scrollbar">
                         {messages.length < 2 && (
-                            <div className="fade-in" style={{ textAlign: 'center', padding: '2rem 0' }}>
-                                <div style={{ background: 'rgba(99,102,241,0.05)', padding: '2rem', borderRadius: '24px', border: '1px dashed rgba(99,102,241,0.2)', maxWidth: '500px', margin: '0 auto' }}>
-                                    <Sparkles size={40} color="#a78bfa" style={{ marginBottom: '1rem' }} />
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.5rem' }}>How can I help you today?</h3>
-                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                                        I can explain complex topics, help you plan your studies, or just give you a productivity boost when you're feeling stuck.
+                            <div className="fade-in" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                                <div style={{ background: 'rgba(99,102,241,0.04)', padding: '2.5rem', borderRadius: '32px', border: '1px dashed rgba(99,102,241,0.2)', maxWidth: '600px', margin: '0 auto', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
+                                    <div style={{ position: 'relative', display: 'inline-block', marginBottom: '1.5rem' }}>
+                                        <Sparkles size={48} color="#a78bfa" className="float" />
+                                        <div style={{ position: 'absolute', top: -10, right: -10, background: '#ec4899', width: 12, height: 12, borderRadius: '50%', boxShadow: '0 0 10px #ec4899' }} />
+                                    </div>
+                                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>How can I help you level up?</h3>
+                                    <p style={{ fontSize: '0.95rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: '2rem' }}>
+                                        I'm your dedicated AI tutor for technical skills, productivity strategies, and academic performance.
                                     </p>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                                        {samplePrompts.slice(0, 2).map((p, i) => (
-                                            <button key={i} onClick={() => suggest(p.text)} style={{
-                                                padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                                color: '#e2e8f0', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s'
+                                        {samplePrompts.slice(0, 4).map((p, i) => (
+                                            <button key={i} onClick={() => suggest(p.text)} className="suggestion-chip" style={{
+                                                padding: '1rem', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                                                color: '#e2e8f0', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.3s'
                                             }}>
-                                                {p.icon} {p.title}
+                                                <div style={{ color: p.color, background: `${p.color}15`, padding: '0.4rem', borderRadius: '8px' }}>{p.icon}</div> 
+                                                <span>{p.title}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -188,18 +207,17 @@ const AiChatPage = () => {
 
                     {/* Input Area */}
                     <div style={{ padding: '1.25rem', background: 'rgba(0,0,0,0.25)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                        {messages.length >= 2 && messages.length < 6 && (
-                            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                                {samplePrompts.slice(2).map((p, i) => (
-                                    <button key={i} onClick={() => suggest(p.text)} style={{
-                                        padding: '0.4rem 0.8rem', borderRadius: '20px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)',
-                                        color: '#a78bfa', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
+                            <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '1.5rem', justifyContent: 'center' }}>
+                                {samplePrompts.map((p, i) => (
+                                    <button key={i} onClick={() => suggest(p.text)} className="chip-pill animate-fade-up" style={{
+                                        padding: '0.5rem 1.25rem', borderRadius: '24px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                                        color: '#cbd5e1', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.3s',
+                                        animationDelay: `${i * 0.05}s`
                                     }}>
-                                        {p.icon} {p.title}
+                                        <div style={{ color: p.color, transform: 'scale(1.1)' }}>{p.icon}</div> {p.title}
                                     </button>
                                 ))}
                             </div>
-                        )}
                         <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} style={{ display: 'flex', gap: '0.75rem' }}>
                             <input
                                 className="input"
@@ -225,6 +243,23 @@ const AiChatPage = () => {
             <style>{`
                 @media (max-width: 900px) {
                     .hide-mobile { display: none !important; }
+                }
+                .topic-btn:hover {
+                    background: rgba(99,102,241,0.1) !important;
+                    border-color: rgba(99,102,241,0.2) !important;
+                    color: #fff !important;
+                    transform: translateX(4px);
+                }
+                .suggestion-chip:hover {
+                    background: rgba(255,255,255,0.08) !important;
+                    border-color: rgba(99,102,241,0.3) !important;
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+                }
+                .chip-pill:hover {
+                    background: rgba(255,255,255,0.12) !important;
+                    border-color: rgba(255,255,255,0.2) !important;
+                    color: #fff !important;
                 }
             `}</style>
         </div>

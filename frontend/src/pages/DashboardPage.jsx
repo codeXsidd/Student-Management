@@ -26,19 +26,37 @@ const timeToMinutes = (t) => {
 const QuickLink = ({ to, icon, label, color, count }) => (
     <Link to={to} style={{ textDecoration: 'none' }}>
         <div className="glass-card" style={{
-            padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
-            cursor: 'pointer', transition: 'all 0.2s', border: '1px solid rgba(99,102,241,0.08)', borderRadius: 12
+            padding: '1.25rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem',
+            cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', border: '1px solid rgba(255,255,255,0.05)', 
+            borderRadius: 16, textAlign: 'center', background: 'rgba(255,255,255,0.02)', position: 'relative', overflow: 'hidden'
         }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = `${color}44`; e.currentTarget.style.background = `${color}08`; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.08)'; e.currentTarget.style.background = 'rgba(26, 26, 46, 0.8)'; }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {React.cloneElement(icon, { size: 18, color })}
+            onMouseEnter={e => { 
+                e.currentTarget.style.borderColor = `${color}66`; 
+                e.currentTarget.style.background = `${color}10`;
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.querySelector('.icon-bg').style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={e => { 
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; 
+                e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.querySelector('.icon-bg').style.transform = 'scale(1)';
+            }}>
+            <div className="icon-bg" style={{ 
+                width: 48, height: 48, borderRadius: 14, background: `${color}15`, 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                transition: 'transform 0.3s ease', boxShadow: `0 8px 16px ${color}10`
+            }}>
+                {React.cloneElement(icon, { size: 22, color })}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 700, fontSize: '0.82rem', color: '#e2e8f0' }}>{label}</p>
-                {count !== undefined && <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{count}</p>}
+                <p style={{ fontWeight: 800, fontSize: '0.85rem', color: '#f8fafc', marginBottom: 2 }}>{label}</p>
+                {count !== undefined ? (
+                    <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>{count}</p>
+                ) : (
+                    <div style={{ width: 12, height: 2, background: color, margin: '0 auto', opacity: 0.3, borderRadius: 2 }} />
+                )}
             </div>
-            <ArrowRight size={13} color="#64748b" />
         </div>
     </Link>
 );
@@ -230,14 +248,21 @@ const DashboardPage = () => {
                 border: '1px solid rgba(99,102,241,0.2)', borderRadius: 16, padding: '1.5rem 2rem',
                 marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem'
             }}>
-                <div>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 6, letterSpacing: '-0.04em' }}>
                         {greeting()}, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span>
                     </h1>
-                    <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
-                        {now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                        {' · '}{now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: '0.9rem', fontWeight: 600 }}>
+                            <Calendar size={16} />
+                            {now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </div>
+                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#475569' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#818cf8', fontSize: '0.9rem', fontWeight: 700 }}>
+                            <Clock size={16} />
+                            {now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </div>
                 </div>
                 {/* NOW / NEXT class pill */}
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -263,19 +288,34 @@ const DashboardPage = () => {
             </div>
 
             {/* ── KEY STATS ROW ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
                 {[
-                    { label: 'Upcoming Deadlines', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent` },
-                    { label: 'Study Streak', value: streak > 0 ? `🔥 ${streak}d` : '—', color: '#ef4444', icon: <Flame size={18} />, sub: streak > 0 ? 'Keep it up!' : 'Start journaling!' },
-                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!' }
+                    { label: 'Deadlines', value: upcoming.length, color: '#f59e0b', icon: <Clock size={20} />, sub: `${urgentCount} urgent`, bg: 'rgba(245,158,11,0.08)' },
+                    { label: 'Study Streak', value: streak > 0 ? `${streak} Days` : '0 Days', color: '#ef4444', icon: <Flame size={20} />, sub: streak > 0 ? 'Burning Bright!' : 'Start Today!', bg: 'rgba(239,68,68,0.08)' },
+                    { label: 'Daily Goals', value: todos.filter(t => t.dayPlan).length, color: '#10b981', icon: <Target size={20} />, sub: `${dashboardTodos.length} remaining`, bg: 'rgba(16,185,129,0.08)' },
+                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#6366f1', icon: <Calendar size={20} />, sub: currentClass ? 'Class in session' : 'All scheduled', bg: 'rgba(99,102,241,0.08)' }
                 ].map((s, idx) => (
-                    <div key={s.label} className="glass-card" style={{ padding: '1.25rem', borderLeft: `4px solid ${s.color}`, animationDelay: `${idx * 0.1}s` }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                            <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</p>
-                            <div style={{ color: s.color, opacity: 0.7 }}>{s.icon}</div>
+                    <div key={idx} className="glass-card stat-card-premium" style={{ 
+                        padding: '1.5rem', 
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderTop: `4px solid ${s.color}`,
+                        animationDelay: `${idx * 0.1}s`,
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{ position: 'absolute', top: '-10%', right: '-5%', opacity: 0.05, transform: 'rotate(-15deg)' }}>
+                            {React.cloneElement(s.icon, { size: 100, color: s.color })}
                         </div>
-                        <p style={{ fontSize: '1.6rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</p>
-                        <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>{s.sub}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                            <div style={{ padding: '0.4rem', borderRadius: '8px', background: s.bg, color: s.color }}>
+                                {s.icon}
+                            </div>
+                            <p style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</p>
+                        </div>
+                        <p style={{ fontSize: '2rem', fontWeight: 900, color: '#f8fafc', lineHeight: 1, marginBottom: 6 }}>{s.value}</p>
+                        <p style={{ fontSize: '0.72rem', color: s.color, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.color }} /> {s.sub}
+                        </p>
                     </div>
                 ))}
             </div>
@@ -593,7 +633,18 @@ const DashboardPage = () => {
 
             </div>
 
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+                .stat-card-premium {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .stat-card-premium:hover {
+                    transform: translateY(-5px);
+                    background: rgba(255,255,255,0.03);
+                    border-color: rgba(255,255,255,0.1);
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                }
+            `}</style>
         </div >
     );
 };
