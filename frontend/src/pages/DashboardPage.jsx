@@ -204,20 +204,18 @@ const DashboardPage = () => {
         <div className="page-container animate-slide-scale">
 
             {/* ── HERO HEADER ── */}
-            <div className="glass-card animate-slide-scale" style={{
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)',
-                padding: '2rem',
-                marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem',
-                border: '1px solid rgba(255,255,255,0.05)'
+            <div style={{
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 50%, rgba(16,185,129,0.05) 100%)',
+                border: '1px solid rgba(99,102,241,0.2)', borderRadius: 16, padding: '1.5rem 2rem',
+                marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem'
             }}>
                 <div>
-                    <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 8, letterSpacing: '-0.03em' }}>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
                         {greeting()}, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span>
                     </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Calendar size={16} /> {now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        <span style={{ opacity: 0.3 }}>|</span>
-                        <Clock size={16} /> {now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
+                        {now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        {' · '}{now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                 </div>
                 {/* NOW / NEXT class pill */}
@@ -244,21 +242,19 @@ const DashboardPage = () => {
             </div>
 
             {/* ── KEY STATS ROW ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 {[
-                    { label: 'Upcoming', value: upcoming.length, color: 'var(--warning)', icon: <Clock size={22} />, sub: `${urgentCount} urgent deadlines`, class: 'productivity-card' },
-                    { label: 'Study Streak', value: streak > 0 ? `${streak} Days` : '0 Days', color: 'var(--danger)', icon: <Flame size={22} />, sub: streak > 0 ? 'You\'re on fire!' : 'Start your streak!', class: 'performance-card' },
-                    { label: 'Today\'s Classes', value: todaySlots.length, color: 'var(--success)', icon: <Calendar size={22} />, sub: currentClass ? 'Class in session' : 'Check schedule', class: 'workspace-card' }
+                    { label: 'Upcoming Deadlines', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent`, class: 'productivity-card' },
+                    { label: 'Study Streak', value: streak > 0 ? `🔥 ${streak}d` : '—', color: '#ef4444', icon: <Flame size={18} />, sub: streak > 0 ? 'Keep it up!' : 'Start journaling!', class: 'performance-card' },
+                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!', class: 'workspace-card' }
                 ].map((s, idx) => (
-                    <div key={s.label} className="glass-card" style={{ padding: '1.75rem', borderBottom: `4px solid ${s.color}`, animationDelay: `${idx * 0.1}s` }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 }}>
-                            <p style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s.label}</p>
-                            <div style={{ color: s.color, background: `${s.color}15`, padding: '10px', borderRadius: '15px' }}>{s.icon}</div>
+                    <div key={s.label} className="glass-card" style={{ padding: '1.5rem', borderLeft: `6px solid ${s.color}`, animationDelay: `${idx * 0.1}s`, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</p>
+                            <div style={{ color: s.color, opacity: 0.8, background: `${s.color}15`, padding: '8px', borderRadius: '12px' }}>{s.icon}</div>
                         </div>
-                        <p style={{ fontSize: '2.2rem', fontWeight: 900, color: '#fff', lineHeight: 1, marginBottom: 8 }}>{s.value}</p>
-                        <p style={{ fontSize: '0.8rem', color: s.color, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <Activity size={12} /> {s.sub}
-                        </p>
+                        <p style={{ fontSize: '1.75rem', fontWeight: 900, color: s.color, lineHeight: 1, marginBottom: 6 }}>{s.value}</p>
+                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.sub}</p>
                     </div>
                 ))}
             </div>

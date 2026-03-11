@@ -4,7 +4,6 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -25,29 +24,48 @@ import HabitBuilderPage from './pages/HabitBuilderPage';
 import FocusRoomPage from './pages/FocusRoomPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AiChatPage from './pages/AiChatPage';
+import AiAssistantPanel from './components/AiAssistantPanel';
 
 import { useLocation } from 'react-router-dom';
 
 const Layout = ({ children }) => {
     const location = useLocation();
+    const [isTransitioning, setIsTransitioning] = React.useState(false);
+    const [displayChildren, setDisplayChildren] = React.useState(children);
+
+    React.useEffect(() => {
+        if (location.pathname !== displayChildren?.props?.children?.type?.name) { // Simple path change check
+            setIsTransitioning(true);
+            const timer = setTimeout(() => {
+                setDisplayChildren(children);
+                setIsTransitioning(false);
+                // The "Auto Reload" feature - ensuring window scroll and fresh state feel
+                window.scrollTo(0, 0);
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [location.pathname]);
 
     return (
-        <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg)' }}>
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
             <Sidebar />
-            <main style={{ flex: 1, overflowY: 'auto', position: 'relative' }} className="custom-scrollbar">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={location.pathname}
-                        initial={{ opacity: 0, y: 15, filter: 'blur(10px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, y: -15, filter: 'blur(10px)' }}
-                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                        style={{ height: '100%' }}
-                    >
-                        {children}
-                    </motion.div>
-                </AnimatePresence>
+            <main className={`main-content ${isTransitioning ? 'page-exit' : 'page-enter'}`} style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+                {displayChildren}
+                {isTransitioning && (
+                    <div style={{
+                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(3,3,11,0.6)', backdropFilter: 'blur(12px)',
+                        zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.3s ease'
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                            <div className="spinner-small" style={{ width: 40, height: 40, borderWidth: 3, borderColor: 'rgba(99,102,241,0.2)', borderTopColor: '#818cf8' }} />
+                            <p style={{ fontSize: '0.8rem', color: '#818cf8', fontWeight: 600, letterSpacing: '0.05em' }}>SYNCING...</p>
+                        </div>
+                    </div>
+                )}
             </main>
+            <AiAssistantPanel />
         </div>
     );
 };

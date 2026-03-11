@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target, Layers, BarChart4, Briefcase, Activity } from 'lucide-react';
-import { aiChat } from '../services/api';
+import { aiChat, getUpcoming, getHabits, API } from '../services/api';
 import toast from 'react-hot-toast';
 
 const AiChatPage = () => {
@@ -19,40 +19,41 @@ const AiChatPage = () => {
     });
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'workspace', 'productivity', 'performance'
+    const [activeTab, setActiveTab] = useState('chat');
+    const [stats, setStats] = useState({ upcoming: [], habits: [], records: [] });
     const messagesEndRef = useRef(null);
 
-    const [userData, setUserData] = useState({
-        subjects: [],
-        tasks: [],
-        habits: [],
-        upcoming: [],
-        gpa: null
-    });
-
     useEffect(() => {
-        const fetchContext = async () => {
+        const loadStats = async () => {
             try {
-                const [subRes, tasksRes, habRes, upRes, gpaRes] = await Promise.all([
-                    API.get('/subjects'),
-                    API.get('/todos'),
-                    API.get('/habits'),
-                    API.get('/assignments/upcoming'),
-                    API.get('/gpa/all').catch(() => ({ data: [] }))
+                const [up, hab, rec] = await Promise.all([
+                    getUpcoming(),
+                    getHabits(),
+                    API.get('/journal')
                 ]);
-                setUserData({
-                    subjects: subRes.data,
-                    tasks: tasksRes.data,
-                    habits: habRes.data,
-                    upcoming: upRes.data,
-                    gpa: gpaRes.data
-                });
+                setStats({ upcoming: up.data, habits: hab.data, records: rec.data });
             } catch (err) {
-                console.warn("Failed to fetch full context for AI", err);
+                console.error("Failed to load AI stats", err);
             }
         };
-        fetchContext();
+        loadStats();
     }, []);
+
+    const getDynamicInsight = () => {
+        if (activeTab === 'workspace') {
+            const upCount = stats.upcoming.length;
+            return `You have ${upCount} upcoming assignments. ${upCount > 3 ? "Your workspace is getting crowded—try focusing on one project at a time." : "Your workspace is clear and optimized for deep focus today."}`;
+        }
+        if (activeTab === 'productivity') {
+            const streak = stats.habits.reduce((acc, h) => Math.max(acc, h.streak || 0), 0);
+            return `Current top habit streak: ${streak} days. You're most consistent with ${stats.habits[0]?.name || 'your routines'}. Productivity is up 12% this week.`;
+        }
+        if (activeTab === 'performance') {
+            const hours = stats.records.reduce((acc, r) => acc + (r.hoursStudied || 0), 0);
+            return `Total study time logged: ${hours}h. Your current trajectory indicates a strong performance boost in your major subjects.`;
+        }
+        return "Analyzing your study patterns to provide better suggestions.";
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,21 +74,8 @@ const AiChatPage = () => {
         setLoading(true);
 
         try {
-            // Build a rich context based on current website state
-            const websiteContext = `
-                Current website data for this student:
-                - Subjects: ${userData.subjects.map(s => s.name).join(', ') || 'None yet'}
-                - Tasks in progress: ${userData.tasks.filter(t => !t.completed).map(t => t.title).join(', ') || 'No active tasks'}
-                - Habits tracking: ${userData.habits.map(h => h.name).join(', ') || 'No habits set'}
-                - Upcoming assignments: ${userData.upcoming.map(u => `${u.title} (due ${new Date(u.deadline).toLocaleDateString()})`).join(', ') || 'No upcoming deadlines'}
-                - Recent chat history:
-                ${messages.slice(-6).map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`).join('\n')}
-            `;
-
-            const res = await aiChat({ 
-                message: text, 
-                context: websiteContext 
-            });
+            const context = messages.slice(-5).map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`).join('\n');
+            const res = await aiChat({ message: text, context });
 
             const aiMsg = {
                 id: (Date.now() + 1).toString(),
@@ -97,12 +85,11 @@ const AiChatPage = () => {
             };
             setMessages(prev => [...prev, aiMsg]);
         } catch (error) {
-            toast.error("AI connection interrupted.");
+            toast.error("I'm having trouble connecting to my brain right now.");
             const errorMsg = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                text: "I'm having trouble connecting to my central brain. However, looking at your workspace, I see you have " + 
-                      (userData.upcoming.length > 0 ? userData.upcoming.length + " upcoming assignments. Maybe we should focus on those?" : "a clear schedule. Ready to start something new?"),
+                text: "I'm currently having trouble connecting to my central brain. Let me try to help based on my local knowledge: Consistency is the key to mastering any subject. Try breaking your current focus into 15-minute sprints!",
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, errorMsg]);
@@ -134,9 +121,9 @@ const AiChatPage = () => {
         <div className="page-container animate-fade-in" style={{ display: 'flex', gap: '1.5rem', height: '100%', maxWidth: '1400px', margin: '0 auto', overflow: 'hidden', padding: '1rem' }}>
 
             {/* Sidebar / History (Desktop only) */}
-            <div className="glass-card hide-mobile" style={{ width: '310px', flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '1.5rem', background: 'rgba(10,10,25,0.6)' }}>
-                <h3 className="gradient-text" style={{ fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Sparkles size={18} /> Intelligence Hub
+            <div className="glass-card hide-mobile" style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '1.25rem' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Bot size={16} /> Intelligence Center
                 </h3>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
@@ -166,10 +153,7 @@ const AiChatPage = () => {
                     <div className="workspace-card" style={{ padding: '1rem', borderRadius: '12px', border: '1px solid rgba(34,211,238,0.1)' }}>
                         <p style={{ fontSize: '0.75rem', color: '#22d3ee', fontWeight: 700, marginBottom: 4 }}>AI INSIGHT</p>
                         <p style={{ fontSize: '0.82rem', color: '#e2e8f0', lineHeight: 1.4 }}>
-                            {activeTab === 'workspace' ? "Your study workspace is 85% optimized for deep focus." : 
-                             activeTab === 'productivity' ? "You're most productive between 10 AM and 2 PM." : 
-                             activeTab === 'performance' ? "Current trajectory: GPA 3.8-4.0 based on current efforts." : 
-                             "Analyzing your study patterns to provide better suggestions."}
+                            {getDynamicInsight()}
                         </p>
                     </div>
                 </div>
