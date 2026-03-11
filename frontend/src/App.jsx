@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
+import FloatingAiBot from './components/FloatingAiBot';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -50,6 +51,7 @@ const Layout = ({ children }) => {
             <Sidebar />
             <main className={`main-content ${isTransitioning ? 'page-exit' : 'page-enter'}`} style={{ flex: 1, overflowY: 'auto' }}>
                 {displayChildren}
+                <FloatingAiBot />
                 {isTransitioning && (
                     <div style={{
                         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,

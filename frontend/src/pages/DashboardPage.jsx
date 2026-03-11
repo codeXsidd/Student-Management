@@ -259,44 +259,116 @@ const DashboardPage = () => {
                 ))}
             </div>
 
-            {/* AI Smart Suggestion Banner */}
-            {(urgentCount > 0 || aiInsight) && (
-                <div className="glass-card animate-slide-scale dash-ai-banner" style={{
-                    marginBottom: '1.5rem',
-                    padding: '1.5rem',
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)',
-                    border: '1px solid rgba(99,102,241,0.2)',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    gap: '1.5rem'
-                }}>
-                    <div className="ai-icon-pulse hide-mobile" style={{ background: 'var(--primary)', padding: '1rem', borderRadius: '15px', flexShrink: 0 }}>
-                        <Bot size={32} color="white" />
+            {/* ── SMART COMMAND CENTER (AI ASK) ── */}
+            <div className="glass-card animate-slide-up" style={{
+                marginBottom: '1.5rem',
+                padding: '1.25rem',
+                background: 'rgba(15,15,35,0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(99,102,241,0.2)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                borderRadius: 20,
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div className="ai-pulse-bg" style={{ 
+                        width: 48, height: 48, borderRadius: 14, 
+                        background: 'linear-gradient(135deg, #6366f1, #10b981)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        boxShadow: '0 0 15px rgba(99,102,241,0.4)'
+                    }}>
+                        <Sparkles size={24} color="white" />
                     </div>
-                    <div style={{ flex: 1, minWidth: '260px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                            <h3 className="gradient-text" style={{ fontSize: '1.1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Intelligence Hub</h3>
-                            {insightLoading && <div className="spinner-small" />}
-                        </div>
-                        <p style={{ fontSize: '0.95rem', color: '#e2e8f0', lineHeight: 1.5, fontWeight: 500 }}>
-                            {insightLoading ? 'Analyzing your workspace performance...' : aiInsight || "Welcome back! I've analyzed your upcoming tasks. Ready to optimize your study session?"}
-                        </p>
-                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
-                            <div className="badge badge-primary"><Layers size={12} /> Workspace Optimized</div>
-                            <div className="badge badge-success"><BarChart4 size={12} /> Performance: Peak</div>
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <Link to="/ai-chat" className="btn-primary" style={{ textDecoration: 'none', textAlign: 'center', fontSize: '0.75rem', padding: '0.5rem 1rem' }}>
-                            Open Insight Center
-                        </Link>
-                        <button onClick={fetchAiInsight} className="btn-secondary" style={{ padding: '0.5rem', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: '#94a3b8' }}>
-                            <RotateCcw size={14} /> Refresh Brain
-                        </button>
+                    <div style={{ flex: 1, minWidth: '240px' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: 2 }}>Smart Command Center</h3>
+                        <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Ask anything about your studies, assignments, or schedule.</p>
                     </div>
                 </div>
-            )}
+                
+                <form 
+                    onSubmit={async (e) => {
+                        e.preventDefault();
+                        const q = e.target.query.value.trim();
+                        if (!q) return;
+                        setInsightLoading(true);
+                        try {
+                            const res = await API.post('/ai/ask-about-me', { query: q });
+                            setAiInsight(res.data.reply);
+                            e.target.query.value = '';
+                        } catch {
+                            setAiInsight("I'm having a bit of trouble connecting to your workspace data. Try checking your internet!");
+                        }
+                        setInsightLoading(false);
+                    }}
+                    style={{ marginTop: '1.25rem', display: 'flex', gap: '0.75rem', position: 'relative' }}
+                >
+                    <input 
+                        name="query"
+                        type="text" 
+                        placeholder="e.g., 'What assignments are due tomorrow?' or 'Help me plan my afternoon'"
+                        className="input"
+                        style={{ 
+                            flex: 1, padding: '0.85rem 1.25rem', borderRadius: 12, 
+                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                            fontSize: '0.9rem', color: '#f8fafc'
+                        }}
+                    />
+                    <button type="submit" className="btn-primary" style={{ padding: '0.85rem 1.5rem', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+                        {insightLoading ? <div className="spinner-small" /> : <Zap size={18} />}
+                        Ask AI
+                    </button>
+                </form>
+            </div>
+
+            {/* AI Smart Suggestion Banner - Updated for more impact */}
+            <div className="glass-card animate-slide-scale dash-ai-banner" style={{
+                marginBottom: '1.5rem',
+                padding: '1.5rem',
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)',
+                border: '1px solid rgba(99,102,241,0.2)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                <div style={{ position: 'absolute', top: -20, right: -20, opacity: 0.1, pointerEvents: 'none' }}>
+                    <Bot size={120} color="#6366f1" />
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ background: 'var(--primary)', padding: '0.6rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Bot size={24} color="white" />
+                    </div>
+                    <div>
+                        <h3 className="gradient-text" style={{ fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Assistant Output</h3>
+                        <p style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>PERSONALIZED STUDY BUDDY</p>
+                    </div>
+                </div>
+
+                <div style={{ 
+                    padding: '1rem 1.25rem', 
+                    background: 'rgba(0,0,0,0.2)', 
+                    borderRadius: 14, 
+                    borderLeft: '4px solid var(--primary)',
+                    minHeight: '60px',
+                    display: 'flex',
+                    alignItems: 'center'
+                }}>
+                    <p style={{ fontSize: '0.95rem', color: '#e2e8f0', lineHeight: 1.6, fontWeight: 500 }}>
+                        {insightLoading ? 'Analyzing your workspace performance...' : aiInsight || "Welcome back! How's the studying going? I'm ready to help you optimize your session."}
+                    </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <div className="badge badge-primary" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}><Layers size={12} /> Optimization: ON</div>
+                        <div className="badge badge-success" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}><Lightbulb size={12} /> Live Insights</div>
+                    </div>
+                    <Link to="/ai-chat" className="btn-secondary" style={{ textDecoration: 'none', fontSize: '0.78rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)' }}>
+                        Visit AI Hub <ArrowRight size={14} />
+                    </Link>
+                </div>
+            </div>
 
             <div className="dashboard-grid-hero" style={{ marginBottom: '1.25rem' }}>
 

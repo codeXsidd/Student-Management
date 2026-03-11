@@ -41,8 +41,14 @@ const AiChatPage = () => {
         setLoading(true);
 
         try {
-            const context = messages.slice(-5).map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`).join('\n');
-            const res = await aiChat({ message: text, context });
+            // Enhanced logic: If it's the first message or in a dedicated tab, use workspace-aware endpoint
+            let res;
+            if (activeTab !== 'chat') {
+                res = await API.post('/ai/ask-about-me', { query: text });
+            } else {
+                const context = messages.slice(-5).map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`).join('\n');
+                res = await aiChat({ message: text, context });
+            }
 
             const aiMsg = {
                 id: (Date.now() + 1).toString(),
