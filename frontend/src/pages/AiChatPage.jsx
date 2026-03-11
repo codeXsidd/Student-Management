@@ -96,8 +96,27 @@ const AiChatPage = () => {
                         <p style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>CURRENT STATUS</p>
                         <p style={{ fontSize: '0.82rem', color: '#e2e8f0', lineHeight: 1.4 }}>Analyzing your study patterns to provide better suggestions.</p>
                     </div>
-                    <div>
-                        <p style={{ fontSize: '0.7rem', color: '#475569', textAlign: 'center', marginTop: '1rem', fontStyle: 'italic' }}>More tools coming soon!</p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <p style={{ fontSize: '0.7rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Specialized Tools</p>
+                        <button onClick={() => suggest("Analyze my productivity for the last 7 days based on my journal and habits.")} style={{
+                            width: '100%', padding: '0.75rem', borderRadius: '10px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)',
+                            color: '#10b981', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8
+                        }}>
+                            <Zap size={14} /> Productivity Report
+                        </button>
+                        <button onClick={() => suggest("Create a study workspace plan for my upcoming exams.")} style={{
+                            width: '100%', padding: '0.75rem', borderRadius: '10px', background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)',
+                            color: '#818cf8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8
+                        }}>
+                            <Target size={14} /> Workspace Strategy
+                        </button>
+                        <button onClick={() => suggest("Predict my exam performance based on my current study hours.")} style={{
+                            width: '100%', padding: '0.75rem', borderRadius: '10px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)',
+                            color: '#ef4444', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8
+                        }}>
+                            <TrendingUp size={14} /> Performance Predictor
+                        </button>
                     </div>
                 </div>
                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>

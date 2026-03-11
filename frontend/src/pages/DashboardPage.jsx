@@ -23,7 +23,7 @@ const timeToMinutes = (t) => {
 
 // ---------- sub-components ----------
 const QuickLink = ({ to, icon, label, color, count }) => (
-    <Link to={to} style={{ textDecoration: 'none' }}>
+    <a href={to} onClick={(e) => { e.preventDefault(); window.location.href = to; }} style={{ textDecoration: 'none' }}>
         <div className="glass-card" style={{
             padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
             cursor: 'pointer', transition: 'all 0.2s', border: '1px solid rgba(99,102,241,0.08)', borderRadius: 12
@@ -39,7 +39,7 @@ const QuickLink = ({ to, icon, label, color, count }) => (
             </div>
             <ArrowRight size={13} color="#64748b" />
         </div>
-    </Link>
+    </a>
 );
 
 const MiniStat = ({ label, value, color, icon }) => (
@@ -245,9 +245,10 @@ const DashboardPage = () => {
                 {[
                     { label: 'Upcoming Deadlines', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent` },
                     { label: 'Study Streak', value: streak > 0 ? `🔥 ${streak}d` : '—', color: '#ef4444', icon: <Flame size={18} />, sub: streak > 0 ? 'Keep it up!' : 'Start journaling!' },
-                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!' }
+                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!' },
+                    { label: 'Productivity Score', value: '88%', color: '#22d3ee', icon: <TrendingUp size={18} />, sub: 'Top 5% this week' }
                 ].map((s, idx) => (
-                    <div key={s.label} className="glass-card" style={{ padding: '1.25rem', borderLeft: `4px solid ${s.color}`, animationDelay: `${idx * 0.1}s` }}>
+                    <div key={s.label} className="glass-card" style={{ padding: '1.25rem', borderLeft: `4px solid ${s.color}`, animationDelay: `${idx * 0.1}s`, background: `linear-gradient(180deg, ${s.color}05 0%, rgba(13,11,26,0.5) 100%)` }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</p>
                             <div style={{ color: s.color, opacity: 0.7 }}>{s.icon}</div>
@@ -290,22 +291,22 @@ const DashboardPage = () => {
                             {insightLoading ? (
                                 <span style={{ opacity: 0.7, fontStyle: 'italic' }}>Thinking...</span>
                             ) : (
-                                <Link to="/ai-chat" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                <a href="/ai-chat" onClick={(e) => { e.preventDefault(); window.location.href = '/ai-chat'; }} style={{ textDecoration: 'none', color: 'inherit' }}>
                                     {aiInsight || (
                                         <>You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. Click to chat about a study strategy!</>
                                     )}
-                                </Link>
+                                </a>
                             ) || "Ready for a productivity boost? Click to chat with your AI buddy!"}
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                        <Link to="/ai-chat" style={{
+                        <a href="/ai-chat" onClick={(e) => { e.preventDefault(); window.location.href = '/ai-chat'; }} style={{
                             padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
                             borderRadius: '8px', fontSize: '0.7rem', fontWeight: 700, color: '#e2e8f0', textDecoration: 'none',
                             display: 'flex', alignItems: 'center', gap: 6, transition: 'var(--transition)'
                         }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
                             Talk to Buddy <ArrowRight size={12} />
-                        </Link>
+                        </a>
                         <button
                             onClick={fetchAiInsight}
                             disabled={insightLoading}
@@ -338,7 +339,7 @@ const DashboardPage = () => {
                             <Calendar size={16} color="#6366f1" /> Today's Schedule
                             <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 400 }}>({today})</span>
                         </h2>
-                        <Link to="/timetable" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>View Full →</Link>
+                        <a href="/timetable" onClick={(e) => { e.preventDefault(); window.location.href = '/timetable'; }} style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>View Full →</a>
                     </div>
 
                     {loading ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Loading...</p>
@@ -346,7 +347,7 @@ const DashboardPage = () => {
                             <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                                 <p style={{ fontSize: '1.8rem', marginBottom: 6 }}>🎉</p>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No classes today!</p>
-                                <Link to="/timetable" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Set up your timetable →</Link>
+                                <a href="/timetable" onClick={(e) => { e.preventDefault(); window.location.href = '/timetable'; }} style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Set up your timetable →</a>
                             </div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -386,7 +387,7 @@ const DashboardPage = () => {
                         <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
                             <AlertTriangle size={16} color="#f59e0b" /> Upcoming Deadlines
                         </h2>
-                        <Link to="/assignments" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>All →</Link>
+                        <a href="/assignments" onClick={(e) => { e.preventDefault(); window.location.href = '/assignments'; }} style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>All →</a>
                     </div>
                     {loading ? <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Loading...</p>
                         : upcoming.length === 0 ? (
@@ -429,7 +430,7 @@ const DashboardPage = () => {
                         <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
                             <Target size={16} color="#f59e0b" /> Today's Focus
                         </h2>
-                        <Link to="/planner" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Plan Day →</Link>
+                        <a href="/planner" onClick={(e) => { e.preventDefault(); window.location.href = '/planner'; }} style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Plan Day →</a>
                     </div>
                     {loading ? (
                         <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Loading...</p>
@@ -437,7 +438,7 @@ const DashboardPage = () => {
                         <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                             <p style={{ fontSize: '1.8rem', marginBottom: 6 }}>🎯</p>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No tasks planned for today.</p>
-                            <Link to="/planner" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Add tasks →</Link>
+                            <a href="/planner" onClick={(e) => { e.preventDefault(); window.location.href = '/planner'; }} style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Add tasks →</a>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -475,7 +476,7 @@ const DashboardPage = () => {
                         <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
                             <Activity size={16} color="#ec4899" /> Daily Habits
                         </h2>
-                        <Link to="/habits" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Manage →</Link>
+                        <a href="/habits" onClick={(e) => { e.preventDefault(); window.location.href = '/habits'; }} style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Manage →</a>
                     </div>
                     {loading ? (
                         <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Loading...</p>
@@ -483,7 +484,7 @@ const DashboardPage = () => {
                         <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                             <p style={{ fontSize: '1.8rem', marginBottom: 6 }}>🌱</p>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No habits added yet.</p>
-                            <Link to="/habits" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Build a habit →</Link>
+                            <a href="/habits" onClick={(e) => { e.preventDefault(); window.location.href = '/habits'; }} style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Build a habit →</a>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -541,13 +542,13 @@ const DashboardPage = () => {
                         <h2 style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 7 }}>
                             <BookMarked size={16} color="#818cf8" /> Recent Study Logs
                         </h2>
-                        <Link to="/journal" style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>View All →</Link>
+                        <a href="/journal" onClick={(e) => { e.preventDefault(); window.location.href = '/journal'; }} style={{ fontSize: '0.72rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>View All →</a>
                     </div>
                     {journalEntries.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                             <p style={{ fontSize: '1.5rem', marginBottom: 6 }}>📖</p>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>No study logs yet.</p>
-                            <Link to="/journal" style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Start journaling →</Link>
+                            <a href="/journal" onClick={(e) => { e.preventDefault(); window.location.href = '/journal'; }} style={{ fontSize: '0.78rem', color: '#818cf8', textDecoration: 'none', fontWeight: 600 }}>Start journaling →</a>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
