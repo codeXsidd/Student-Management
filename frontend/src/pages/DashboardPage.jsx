@@ -5,8 +5,7 @@ import API, { getUpcoming, getHabits, toggleHabit, aiChat } from '../services/ap
 import {
     BookOpen, Calendar, CheckCircle, AlertTriangle, TrendingUp, Clock,
     Award, Timer, GraduationCap, BookMarked, Code2, Users, ClipboardList,
-    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote, Check, Activity, Circle, CheckCircle2, Bot, RotateCcw,
-    Layers, Briefcase, BarChart4, Lightbulb
+    CheckSquare, Flame, Zap, Target, ArrowRight, Star, StickyNote, Check, Activity, Circle, CheckCircle2, Bot, RotateCcw
 } from 'lucide-react';
 
 // ---------- helpers ----------
@@ -244,55 +243,87 @@ const DashboardPage = () => {
             {/* ── KEY STATS ROW ── */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 {[
-                    { label: 'Upcoming Deadlines', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent`, class: 'productivity-card' },
-                    { label: 'Study Streak', value: streak > 0 ? `🔥 ${streak}d` : '—', color: '#ef4444', icon: <Flame size={18} />, sub: streak > 0 ? 'Keep it up!' : 'Start journaling!', class: 'performance-card' },
-                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!', class: 'workspace-card' }
+                    { label: 'Upcoming Deadlines', value: upcoming.length, color: '#f59e0b', icon: <Clock size={18} />, sub: `${urgentCount} urgent` },
+                    { label: 'Study Streak', value: streak > 0 ? `🔥 ${streak}d` : '—', color: '#ef4444', icon: <Flame size={18} />, sub: streak > 0 ? 'Keep it up!' : 'Start journaling!' },
+                    { label: 'Today\'s Classes', value: todaySlots.length, color: '#10b981', icon: <Calendar size={18} />, sub: currentClass ? '📍 Class now' : nextClass ? '⏭ Next coming' : 'All done!' }
                 ].map((s, idx) => (
-                    <div key={s.label} className="glass-card" style={{ padding: '1.5rem', borderLeft: `6px solid ${s.color}`, animationDelay: `${idx * 0.1}s`, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                            <p style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</p>
-                            <div style={{ color: s.color, opacity: 0.8, background: `${s.color}15`, padding: '8px', borderRadius: '12px' }}>{s.icon}</div>
+                    <div key={s.label} className="glass-card" style={{ padding: '1.25rem', borderLeft: `4px solid ${s.color}`, animationDelay: `${idx * 0.1}s` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</p>
+                            <div style={{ color: s.color, opacity: 0.7 }}>{s.icon}</div>
                         </div>
-                        <p style={{ fontSize: '1.75rem', fontWeight: 900, color: s.color, lineHeight: 1, marginBottom: 6 }}>{s.value}</p>
-                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.sub}</p>
+                        <p style={{ fontSize: '1.6rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</p>
+                        <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>{s.sub}</p>
                     </div>
                 ))}
             </div>
 
             {/* AI Smart Suggestion Banner */}
             {(urgentCount > 0 || aiInsight) && (
-                <div className="glass-card animate-slide-scale dash-ai-banner" style={{
+                <div className="glass-card animate-slide-scale" style={{
                     marginBottom: '1.5rem',
-                    padding: '1.5rem',
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)',
-                    border: '1px solid rgba(99,102,241,0.2)',
+                    padding: '1.25rem 1.5rem',
                     display: 'flex',
-                    flexWrap: 'wrap',
                     alignItems: 'center',
-                    gap: '1.5rem'
+                    gap: '1.25rem',
+                    background: urgentCount > 0
+                        ? 'linear-gradient(90deg, rgba(239,68,68,0.12), rgba(13,11,26,0.5))'
+                        : 'linear-gradient(90deg, rgba(16,185,129,0.12), rgba(13,11,26,0.5))',
+                    borderLeft: `4px solid ${urgentCount > 0 ? '#ef4444' : '#10b981'}`,
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
-                    <div className="ai-icon-pulse hide-mobile" style={{ background: 'var(--primary)', padding: '1rem', borderRadius: '15px', flexShrink: 0 }}>
-                        <Bot size={32} color="white" />
+                    <div className="ai-icon-pulse" style={{
+                        background: urgentCount > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+                        padding: '0.6rem', borderRadius: '50%', flexShrink: 0
+                    }}>
+                        <Bot size={24} color={urgentCount > 0 ? '#ef4444' : '#10b981'} />
                     </div>
-                    <div style={{ flex: 1, minWidth: '260px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                            <h3 className="gradient-text" style={{ fontSize: '1.1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Intelligence Hub</h3>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '0.2rem' }}>
+                            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                AI Smart Suggestion
+                            </h4>
                             {insightLoading && <div className="spinner-small" />}
                         </div>
-                        <p style={{ fontSize: '1.05rem', color: '#e2e8f0', lineHeight: 1.6, fontWeight: 500, fontStyle: 'italic' }}>
-                            "{insightLoading ? 'Analyzing your workspace performance...' : aiInsight || "Welcome back! I've analyzed your upcoming tasks. Ready to optimize your study session?"}"
-                        </p>
-                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
-                            <div className="badge badge-primary"><Layers size={12} /> Workspace Optimized</div>
-                            <div className="badge badge-success"><BarChart4 size={12} /> Performance: Peak</div>
+                        <div style={{ fontSize: '0.92rem', color: '#cbd5e1', lineHeight: 1.5, fontWeight: 500 }}>
+                            {insightLoading ? (
+                                <span style={{ opacity: 0.7, fontStyle: 'italic' }}>Thinking...</span>
+                            ) : (
+                                <Link to="/ai-chat" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    {aiInsight || (
+                                        <>You have <b>{urgentCount} urgent deadline{urgentCount > 1 ? 's' : ''}</b>. Click to chat about a study strategy!</>
+                                    )}
+                                </Link>
+                            ) || "Ready for a productivity boost? Click to chat with your AI buddy!"}
                         </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <Link to="/ai-chat" className="btn-primary" style={{ textDecoration: 'none', textAlign: 'center', fontSize: '0.75rem', padding: '0.5rem 1rem' }}>
-                            Open Insight Center
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <Link to="/ai-chat" style={{
+                            padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px', fontSize: '0.7rem', fontWeight: 700, color: '#e2e8f0', textDecoration: 'none',
+                            display: 'flex', alignItems: 'center', gap: 6, transition: 'var(--transition)'
+                        }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                            Talk to Buddy <ArrowRight size={12} />
                         </Link>
-                        <button onClick={fetchAiInsight} className="btn-secondary" style={{ padding: '0.5rem', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: '#94a3b8' }}>
-                            <RotateCcw size={14} /> Refresh Brain
+                        <button
+                            onClick={fetchAiInsight}
+                            disabled={insightLoading}
+                            style={{
+                                background: 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                cursor: 'pointer',
+                                color: '#94a3b8',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 32, height: 32,
+                                borderRadius: '50%',
+                                transition: 'all 0.3s'
+                            }}
+                            title="Refresh Brain"
+                        >
+                            <RotateCcw size={14} style={{ animation: insightLoading ? 'spin 1s linear infinite' : 'none' }} />
                         </button>
                     </div>
                 </div>
