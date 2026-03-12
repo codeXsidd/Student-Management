@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -25,14 +26,29 @@ import FocusRoomPage from './pages/FocusRoomPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AiChatPage from './pages/AiChatPage';
 
-const Layout = ({ children }) => (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
-        <Sidebar />
-        <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
-            {children}
-        </main>
-    </div>
-);
+const Layout = ({ children }) => {
+    const { pathname } = useLocation();
+
+    // Auto-scroll to top when route changes
+    useEffect(() => {
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.scrollTo({ top: 0, behavior: 'instant' });
+        }
+    }, [pathname]);
+
+    return (
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
+            <Sidebar />
+            <main className="main-content" style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+                {/* Key forces component to unmount/remount on navigation for a 'fresh' feel */}
+                <div key={pathname} style={{ height: '100%' }}>
+                    {children}
+                </div>
+            </main>
+        </div>
+    );
+};
 const P = ({ children }) => <ProtectedRoute><Layout>{children}</Layout></ProtectedRoute>;
 
 const AppRoutes = () => {
