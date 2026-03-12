@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Todo = require('../models/Todo');
 const Assignment = require('../models/Assignment');
+const Note = require('../models/Note');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const getAIModel = (modelName, key, version = 'v1') => {
@@ -323,7 +324,42 @@ router.get('/metrics', auth, async (req, res) => {
     }
 });
 
-// 8. Deep Work Insights
+// 8. Personalized Student Daily Briefing
+router.get('/briefing', auth, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Fetch user data context
+        const [todos, assignments, notes] = await Promise.all([
+            Todo.find({ user: userId, completed: false, dayPlan: true }),
+            Assignment.find({ user: userId, completed: false }).sort({ deadline: 1 }).limit(3).populate('subject', 'name'),
+            Note.find({ user: userId }).sort({ updatedAt: -1 }).limit(2)
+        ]);
+
+        const todoList = todos.map(t => t.title).join(', ');
+        const assignmentList = assignments.map(a => `${a.title} (due ${a.deadline.toDateString()})`).join(', ');
+        const recentNotes = notes.map(n => n.content.substring(0, 50)).join('; ');
+
+        const prompt = `You are a high-performance study coach. Generate a concise, motivating "Daily Briefing" (max 100 words) for the student based on this data:
+        Today's Focus: ${todoList || 'No specific focus set yet'}
+        Upcoming Assignments: ${assignmentList || 'None soon'}
+        Recent Notes: ${recentNotes || 'No recent notes'}
+        
+        Format: Start with a personalized greeting, give a 1-sentence summary of the day's priority, and one high-energy motivation tip. Use a supportive, professional tone.`;
+
+        const model = getAIModel('gemini-1.5-flash', process.env.GEMINI_API_KEY);
+        const result = await model.generateContent(prompt);
+        const summary = result.response.text();
+
+        res.json({ briefing: summary });
+    } catch (err) {
+        res.status(500).json({ message: "Briefing error", error: err.message });
+    }
+});
+
+// 9. Deep Work Insights
 router.get('/insights', auth, async (req, res) => {
     try {
         const prompt = `Generate a unique, highly actionable "Deep Work Insight" or "Productivity Tip" for a university student. 

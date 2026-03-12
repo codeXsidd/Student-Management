@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target, Coffee, Layout, Calendar, Flame } from 'lucide-react';
 import API, { aiChat } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -22,10 +22,30 @@ const AiChatPage = () => {
     const [insight, setInsight] = useState('Analyzing your study patterns to provide better suggestions...');
     const [showSidebar, setShowSidebar] = useState(false);
     const [metrics, setMetrics] = useState({ distraction: 'Low', load: 'Balanced', flow: '88%' });
+    const [focusMode, setFocusMode] = useState(false);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const fetchBriefing = async () => {
+        setLoading(true);
+        try {
+            const res = await API.get('/ai/briefing');
+            if (res.data.briefing) {
+                const briefingMsg = {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    text: res.data.briefing,
+                    timestamp: new Date()
+                };
+                setMessages(prev => [...prev, briefingMsg]);
+            }
+        } catch (e) {
+            toast.error("Cloud not generate today's briefing.");
+        }
+        setLoading(false);
     };
 
     const fetchInsight = async () => {
@@ -191,7 +211,38 @@ const AiChatPage = () => {
                     </div>
                 </div>
 
-                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderRadius: '12px', background: focusMode ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <Flame size={16} color={focusMode ? '#818cf8' : '#64748b'} />
+                            <span style={{ fontSize: '0.8rem', color: '#e2e8f0', fontWeight: 600 }}>Focus Mode</span>
+                        </div>
+                        <div 
+                            onClick={() => setFocusMode(!focusMode)}
+                            style={{ 
+                                width: 36, height: 20, borderRadius: 20, background: focusMode ? '#6366f1' : 'rgba(255,255,255,0.1)', 
+                                position: 'relative', cursor: 'pointer', transition: 'all 0.3s' 
+                            }}
+                        >
+                            <div style={{ 
+                                width: 14, height: 14, borderRadius: '50%', background: 'white', 
+                                position: 'absolute', top: 3, left: focusMode ? 19 : 3, transition: 'all 0.3s' 
+                            }}></div>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={fetchBriefing}
+                        disabled={loading}
+                        style={{ 
+                            width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.1)', 
+                            border: '1px solid rgba(129, 140, 248, 0.2)', color: '#818cf8', fontSize: '0.75rem', 
+                            fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 
+                        }}
+                    >
+                        <Calendar size={14} /> Get Daily Briefing
+                    </button>
+
                     <button onClick={clearChat} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.05)'}>
                         <Trash2 size={14} /> Clear History
                     </button>
@@ -199,20 +250,30 @@ const AiChatPage = () => {
             </div>
 
             {/* Main Chat Area */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'hidden' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'hidden', transition: 'all 0.5s', opacity: focusMode ? 1 : 1 }}>
 
                 {/* Chat Display */}
-                <div className="glass-card chat-main-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, background: 'rgba(15,15,30,0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="glass-card chat-main-container" style={{ 
+                    flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, 
+                    background: focusMode ? 'rgba(5, 5, 10, 0.95)' : 'rgba(15,15,30,0.4)', 
+                    border: focusMode ? '1px solid rgba(99,102,241,0.2)' : '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: focusMode ? '0 0 40px rgba(99,102,241,0.1)' : 'none',
+                    transition: 'all 0.4s'
+                }}>
 
                     {/* Header */}
                     <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div className="ai-icon-pulse" style={{ background: 'linear-gradient(135deg, #10b981, #6366f1)', padding: '0.4rem', borderRadius: '10px', color: 'white' }}>
+                            <div className={focusMode ? "pulse-glow" : "ai-icon-pulse"} style={{ background: focusMode ? 'linear-gradient(135deg, #10b981, #ef4444)' : 'linear-gradient(135deg, #10b981, #6366f1)', padding: '0.4rem', borderRadius: '10px', color: 'white' }}>
                                 <Bot size={18} />
                             </div>
                             <div>
-                                <h2 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc' }}>AI Study Buddy</h2>
-                                <span style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>Active Now</span>
+                                <h2 style={{ fontSize: '0.9rem', fontWeight: 800, color: focusMode ? '#ef4444' : '#f8fafc' }}>
+                                    {focusMode ? 'Focus Assistant' : 'AI Study Buddy'}
+                                </h2>
+                                <span style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>
+                                    {focusMode ? 'Locked In' : 'Active Now'}
+                                </span>
                             </div>
                         </div>
                         <button 
@@ -290,7 +351,24 @@ const AiChatPage = () => {
                     </div>
 
                     {/* Input Area */}
-                    <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ padding: '1rem', background: focusMode ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        
+                        {/* Quick Actions Row */}
+                        <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.4rem' }} className="hide-scrollbar">
+                            <button onClick={fetchBriefing} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.9rem', borderRadius: '12px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>
+                                <Calendar size={14} /> Daily Briefing
+                            </button>
+                            <button onClick={() => suggest("Help me plan a high-efficiency schedule for today based on my goals.")} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.9rem', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>
+                                <Layout size={14} /> Plan My Day
+                            </button>
+                            <button onClick={() => suggest("Summarize my most important recent study notes.")} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.9rem', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>
+                                <Coffee size={14} /> Summarize Notes
+                            </button>
+                            <button onClick={() => suggest("Analyze my current progress and identify areas for improvement.")} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.9rem', borderRadius: '12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>
+                                <Target size={14} /> Status Check
+                            </button>
+                        </div>
+
                         {messages.length >= 2 && messages.length < 8 && (
                             <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '0.75rem', paddingBottom: '0.25rem' }} className="hide-scrollbar">
                                 {samplePrompts.slice(4).map((p, i) => (
@@ -346,6 +424,13 @@ const AiChatPage = () => {
                 
                 .refresh-btn:hover { color: #818cf8 !important; transform: rotate(15deg); }
                 .refresh-btn:active { transform: scale(0.9); }
+
+                @keyframes pulse-glow {
+                    0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
+                    50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+                    100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
+                }
+                .pulse-glow { animation: pulse-glow 2s infinite; }
                 
                 .hide-scrollbar::-webkit-scrollbar { display: none; }
                 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
