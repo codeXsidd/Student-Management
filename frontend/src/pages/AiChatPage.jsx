@@ -30,19 +30,22 @@ const AiChatPage = () => {
 
     const fetchInsight = async () => {
         try {
-            const res = await API.get('/ai/insights');
-            if (res.data.insight) setInsight(res.data.insight);
-            // Randomize metrics slightly to feel alive
-            const distractionLevels = ['Low', 'Minimal', 'Very Low'];
-            const cognitiveLoads = ['Balanced', 'Moderate', 'Ideal'];
-            const flowPercent = (Math.floor(Math.random() * 15) + 80) + '%';
-            setMetrics({
-                distraction: distractionLevels[Math.floor(Math.random() * distractionLevels.length)],
-                load: cognitiveLoads[Math.floor(Math.random() * cognitiveLoads.length)],
-                flow: flowPercent
-            });
+            // Fetch insight and real metrics in parallel
+            const [insightRes, metricsRes] = await Promise.all([
+                API.get('/ai/insights'),
+                API.get('/ai/metrics')
+            ]);
+            
+            if (insightRes.data.insight) setInsight(insightRes.data.insight);
+            if (metricsRes.data) {
+                setMetrics({
+                    distraction: metricsRes.data.distraction,
+                    load: metricsRes.data.load,
+                    flow: metricsRes.data.flow
+                });
+            }
         } catch (e) {
-            console.error("Failed to fetch insight");
+            console.error("Failed to fetch fresh AI activity data");
         }
     };
 

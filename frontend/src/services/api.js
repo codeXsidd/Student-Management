@@ -63,3 +63,4 @@ export const summarizeText = (data) => API.post('/ai/summarize', data);
 export const optimizeSchedule = (data) => API.post('/ai/optimize', data);
 export const getGpaStrategy = (data) => API.post('/ai/gpa-strategy', data);
 export const getAiInsights = () => API.get('/ai/insights');
+export const getAiMetrics = () => API.get('/ai/metrics');

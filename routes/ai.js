@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const Todo = require('../models/Todo');
+const Assignment = require('../models/Assignment');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const getAIModel = (modelName, key, version = 'v1') => {
@@ -277,7 +279,51 @@ router.post('/gpa-strategy', auth, async (req, res) => {
     }
 });
 
-// 7. Deep Work Insights
+// 7. Real-world Focus Metrics calculation
+router.get('/metrics', auth, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Fetch todos for today and all pending assignments
+        const [todos, assignments] = await Promise.all([
+            Todo.find({ user: userId }),
+            Assignment.find({ user: userId, completed: false })
+        ]);
+
+        const completedToday = todos.filter(t => t.completed && t.completedAt >= startOfDay).length;
+        const pendingToday = todos.filter(t => !t.completed && t.dayPlan).length;
+        const totalPending = todos.filter(t => !t.completed).length + assignments.length;
+
+        // Distraction Level: High if many pending today with zero progress, Low if some completed today
+        let distraction = "Moderate";
+        if (completedToday >= 2) distraction = "Low";
+        else if (pendingToday > 4 && completedToday === 0) distraction = "High";
+        else if (completedToday >= 1) distraction = "Minimal";
+
+        // Cognitive Load: Based on total pending across assignments and todos
+        let load = "Ideal";
+        if (totalPending > 10) load = "High";
+        else if (totalPending > 5) load = "Heavy";
+        else if (totalPending > 2) load = "Balanced";
+        else if (totalPending === 0) load = "Deep Rest";
+
+        // Flow Potential: Ratio of completion or just a logic based on progress
+        const totalToday = completedToday + pendingToday;
+        const flowPercent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
+        
+        // Base potential on progress but cap it realistically
+        let flowPotential = (80 + (completedToday * 2) - (pendingToday)).toString() + "%";
+        if (totalToday === 0) flowPotential = "85%"; // Ready to start
+
+        res.json({ distraction, load, flow: flowPotential });
+    } catch (err) {
+        res.status(500).json({ message: "AI Metrics Error", error: err.message });
+    }
+});
+
+// 8. Deep Work Insights
 router.get('/insights', auth, async (req, res) => {
     try {
         const prompt = `Generate a unique, highly actionable "Deep Work Insight" or "Productivity Tip" for a university student. 
