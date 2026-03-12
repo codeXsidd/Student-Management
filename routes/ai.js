@@ -4,14 +4,15 @@ const auth = require('../middleware/auth');
 const Todo = require('../models/Todo');
 const Assignment = require('../models/Assignment');
 const Note = require('../models/Note');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
-const getAIModel = (modelName, key, version = 'v1') => {
+// Initialize the new Google GenAI Client
+const getClient = (key) => {
     try {
-        const genAI = new GoogleGenerativeAI(key);
-        // Default to v1, but allow v1beta as fallback for older models if needed
-        return genAI.getGenerativeModel({ model: modelName }, { apiVersion: version });
+        if (!key) return null;
+        return new GoogleGenAI({ apiKey: key });
     } catch (err) {
+        console.error("Failed to initialize GoogleGenAI client:", err.message);
         return null;
     }
 };
@@ -20,12 +21,13 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
     let key = process.env.GEMINI_API_KEY;
     if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
 
-    // Aggressive cleaning to remove quotes or erratic whitespace
+    // Cleaning API Key
     key = key.trim().replace(/^["']|["']$/g, '');
 
-    const fullPrompt = `${systemInstruction}\n\nStudent Input: ${prompt}`;
+    const client = getClient(key);
+    if (!client) throw new Error("AI_CLIENT_INITIALIZATION_FAILED");
 
-    // Valid model names for the current Gemini API
+    // Valid model names for the current Gemini API in 2026
     const models = [
         "gemini-3.1-flash",
         "gemini-3.1-pro",
@@ -37,66 +39,52 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
 
     let lastError = null;
 
-    // Try each model
+    // Try each model using the new syntax
     for (const modelName of models) {
         try {
-            console.log(`🤖 AI Attempt: ${modelName} (v1)`);
-            const activeModel = getAIModel(modelName, key, 'v1');
-            if (!activeModel) continue;
+            console.log(`🤖 AI Attempt: ${modelName} via @google/genai`);
+            
+            const interaction = await client.interactions.create({
+                model: modelName,
+                input: `${systemInstruction}\n\nStudent Input: ${prompt}`,
+            });
 
-            const result = await activeModel.generateContent(fullPrompt);
-            const response = await result.response;
-            const text = response.text();
-
-            if (text) {
-                console.log(`✅ AI Success: ${modelName}`);
-                return text.trim();
+            // Extract text from the new interaction output structure
+            if (interaction && interaction.outputs && interaction.outputs.length > 0) {
+                const text = interaction.outputs[interaction.outputs.length - 1].text;
+                if (text) {
+                    console.log(`✅ AI Success: ${modelName}`);
+                    return text.trim();
+                }
             }
         } catch (err) {
             lastError = err;
-            console.warn(`⚠️ Model ${modelName} failed on v1:`, err.message);
+            console.warn(`⚠️ Model ${modelName} failed:`, err.message);
 
-            // If the key specifically is invalid, no point in trying other models
+            // Handle invalid API key specifically
             if (err.message.toLowerCase().includes('api key') ||
-                err.message.toLowerCase().includes('apikey_invalid')) {
-                throw new Error("The API Key provided in Render appears to be invalid. Please check for extra spaces or incorrect characters.");
+                err.message.toLowerCase().includes('apikey_invalid') ||
+                err.message.toLowerCase().includes('401')) {
+                throw new Error("Invalid Gemini API Key. Please verify your credentials.");
             }
 
-            // If it's a 404 or unsupported on v1, we might try it once more on v1beta for robustness
-            if (err.message.includes('404') || err.message.includes('not found')) {
-                try {
-                    console.log(`🔄 AI Retry: ${modelName} (v1beta)`);
-                    const betaModel = getAIModel(modelName, key, 'v1beta');
-                    const betaResult = await betaModel.generateContent(fullPrompt);
-                    const betaResponse = await betaResult.response;
-                    const betaText = betaResponse.text();
-                    if (betaText) {
-                        console.log(`✅ AI Success: ${modelName} (v1beta)`);
-                        return betaText.trim();
-                    }
-                } catch (betaErr) {
-                    console.warn(`⚠️ Model ${modelName} also failed on v1beta:`, betaErr.message);
-                }
-            }
-            // Continue to next model if this one failed
+            // Continue to next model
             continue;
         }
     }
 
-    // Comprehensive error if everything failed
+    // Fallback error if everything failed
     console.error("❌ CRITICAL: ALL AI MODELS FAILED.");
     const finalErrorMessage = lastError ? lastError.message : "Connection failed to all Gemini models.";
-    throw new Error(`${finalErrorMessage}. (Check your API key and region settings)`);
+    throw new Error(`${finalErrorMessage}. Please check your API key and network connection.`);
 };
 
 // Helper to extract JSON from AI response safely
 const extractJson = (text) => {
     try {
-        // Try direct parse first
         return JSON.parse(text.trim());
     } catch (e) {
         try {
-            // Find first { or [ and last } or ]
             const firstBrace = text.search(/\{|\[/);
             const lastBrace = Math.max(text.lastIndexOf('}'), text.lastIndexOf(']'));
             if (firstBrace !== -1 && lastBrace !== -1) {
@@ -120,21 +108,19 @@ router.get('/verify', auth, async (req, res) => {
     }
 });
 
-
 // 1. Break down a complex task into subtasks
 router.post('/breakdown', auth, async (req, res) => {
     try {
         const { taskTitle } = req.body;
         if (!taskTitle) return res.status(400).json({ message: "Task title required" });
 
-        const prompt = `Break down the following student goal into 3-5 highly actionable, small subtasks:\n\nGoal: "${taskTitle}"\n\nReturn EXACTLY this JSON array format (no markdown formatting, no comments):\n[{"title":"Phase 1", "duration":"30m"}, {"title":"...", "duration":"..."}]`;
+        const prompt = `Break down the following student goal into 3-5 highly actionable, small subtasks:\n\nGoal: "${taskTitle}"\n\nReturn EXACTLY this JSON array format:\n[{"title":"Phase 1", "duration":"30m"}, {"title":"...", "duration":"..."}]`;
 
         try {
             const responseText = await callAI(prompt);
             const subtasks = extractJson(responseText);
             res.json(subtasks);
         } catch (e) {
-            // Mock Fallback
             res.json([
                 { title: `Research concepts for ${taskTitle.split(' ')[0]}`, duration: "30m" },
                 { title: `Draft outline and main points`, duration: "45m" },
@@ -146,7 +132,6 @@ router.post('/breakdown', auth, async (req, res) => {
     }
 });
 
-
 // 2. Generate Flashcards from notes
 router.post('/flashcards', auth, async (req, res) => {
     try {
@@ -156,11 +141,10 @@ router.post('/flashcards', auth, async (req, res) => {
         const prompt = `Convert the following study notes into 2 to 4 interactive flashcards.\n\nNotes:\n"${noteContent}"\n\nReturn EXACTLY this JSON array format:\n[{"q":"What is...", "a":"It is..."}, {"q":"...", "a":"..."}]`;
 
         try {
-            const responseText = await callAI(prompt, "You extract key concepts and testing material.");
+            const responseText = await callAI(prompt, "You are a professional instructor. Extract key concepts.");
             const cards = extractJson(responseText);
             res.json(cards);
         } catch (e) {
-            // Mock Fallback
             res.json([
                 { q: "What is the main topic here?", a: "The core concept discussed in the text." },
                 { q: "Can you list a key detail?", a: "A specific fact mentioned in the notes." }
@@ -170,7 +154,6 @@ router.post('/flashcards', auth, async (req, res) => {
         res.status(500).json({ message: "AI Error", error: err.message });
     }
 });
-
 
 // 3. AI Tutor (Chat)
 router.post('/chat', auth, async (req, res) => {
@@ -182,23 +165,19 @@ router.post('/chat', auth, async (req, res) => {
         if (context) prompt += `\nContext: ${context}`;
 
         try {
-            const responseText = await callAI(prompt, "You are a concise, highly knowledgeable, friendly tutor helping a university student in a Deep Focus Room. Keep answers under 3-4 short paragraphs. Explain concepts simply through analogies if possible.");
+            const responseText = await callAI(prompt, "You are a concise, highly knowledgeable, friendly tutor helping a university student. Keep answers under 3 short paragraphs. Use analogies.");
             res.json({ reply: responseText.trim() });
         } catch (e) {
-            console.error('❌ AI Chat Detailed Error:', e);
-            // Professional Fallback with diagnostic info
             if (e.message === 'API_KEY_MISSING') {
-                res.json({ reply: "I'm currently in **Demonstration Mode**. To enable my full AI capabilities, please ensure the `GEMINI_API_KEY` is set in the Render environment variables." });
+                res.json({ reply: "I'm currently in **Demonstration Mode**. Please configure the `GEMINI_API_KEY` to enable my full intelligence." });
             } else {
-                res.json({ reply: "I'm having trouble connecting right now. Please try again in a moment." });
+                res.json({ reply: "I'm experiencing a brief connection issue. Try asking me again in a few seconds." });
             }
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });
     }
 });
-
-
 
 // 4. Summarizer
 router.post('/summarize', auth, async (req, res) => {
@@ -212,9 +191,7 @@ router.post('/summarize', auth, async (req, res) => {
             const responseText = await callAI(prompt);
             res.json({ summary: responseText.trim() });
         } catch (e) {
-            console.error('AI Summarize Error:', e.message);
-            // Professional Fallback
-            res.json({ summary: "• Extracted core themes from your reading material.\n• Summarized key technical concepts for better retention.\n• Final actionable summary of the provided text." });
+            res.json({ summary: "• Core themes extracted from the material.\n• Key technical concepts summarized.\n• Actionable takeaways provided." });
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });
@@ -227,23 +204,17 @@ router.post('/optimize', auth, async (req, res) => {
         const { timetable, focus } = req.body;
         const prompt = `Optimize this student timetable for ${focus || 'overall productivity'}. 
         Timetable Data: ${JSON.stringify(timetable)}
-        
-        Return EXACTLY this JSON format:
-        {
-          "suggestions": ["suggestion 1", "suggestion 2"],
-          "score": 85
-        }`;
+        Return EXACTLY this JSON format: {"suggestions": ["suggestion 1", "suggestion 2"], "score": 85}`;
 
         try {
-            const responseText = await callAI(prompt, "You are a study efficiency expert. Return raw JSON.");
+            const responseText = await callAI(prompt, "Study efficiency expert. Return raw JSON.");
             res.json(extractJson(responseText));
         } catch (e) {
-            console.error('AI Optimize Error:', e.message);
             res.json({
                 suggestions: [
-                    "Consider moving heavy subjects to your peak morning hours.",
-                    "Ensure you have at least 15-minute breaks between back-to-back classes.",
-                    "Your current schedule looks well-balanced for the week."
+                    "Prioritize harder subjects during your peak energy hours.",
+                    "Ensure adequate breaks between intense study sessions.",
+                    "Your current schedule represents a solid balance."
                 ],
                 score: 75
             });
@@ -253,26 +224,23 @@ router.post('/optimize', auth, async (req, res) => {
     }
 });
 
-// 6. GPA Strategy Predictor
+// 6. GPA Predictor
 router.post('/gpa-strategy', auth, async (req, res) => {
     try {
         const { currentCgpa, targetCgpa, remainingSems } = req.body;
-
-        const prompt = `Student current CGPA is ${currentCgpa}. Target is ${targetCgpa} with ${remainingSems} semesters left. 
-        Calculate required average SGPA. Return EXACTLY a JSON: {"requiredSgpa": "9.2", "advice": "...", "difficulty": "Hard/Moderate/Easy"}`;
+        const prompt = `Current CGPA: ${currentCgpa}. Target: ${targetCgpa}. Remaining semesters: ${remainingSems}. 
+        Calculate required SGPA. Return EXACTLY a JSON: {"requiredSgpa": "9.2", "advice": "...", "difficulty": "Hard"}`;
 
         try {
-            const responseText = await callAI(prompt, "You are a professional academic advisor. Return only raw JSON.");
+            const responseText = await callAI(prompt, "Academic advisor. Return only raw JSON.");
             res.json(extractJson(responseText));
         } catch (e) {
-            console.error('GPA Strategy AI Error:', e.message);
-            // Intelligent Fallback Calculation
             const diff = (targetCgpa * 8) - (currentCgpa * (8 - remainingSems));
             const reqSgpa = Math.min(10, Math.max(0, diff / remainingSems)).toFixed(2);
             res.json({
                 requiredSgpa: reqSgpa,
-                advice: `To reach your ${targetCgpa} goal, you'll need to maintain around ${reqSgpa} SGPA. Focus on core subjects with high credits.`,
-                difficulty: reqSgpa > 9 ? "Hard" : reqSgpa > 7.5 ? "Moderate" : "Easy"
+                advice: `To hit ${targetCgpa}, you'll need approximately ${reqSgpa} SGPA. Focus on high-credit subjects.`,
+                difficulty: reqSgpa > 9 ? "Hard" : reqSgpa > 8 ? "Moderate" : "Easy"
             });
         }
     } catch (err) {
@@ -280,14 +248,13 @@ router.post('/gpa-strategy', auth, async (req, res) => {
     }
 });
 
-// 7. Real-world Focus Metrics calculation
+// 7. Student Metrics
 router.get('/metrics', auth, async (req, res) => {
     try {
         const userId = req.userId;
         const now = new Date();
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        // Fetch todos for today and all pending assignments
         const [todos, assignments] = await Promise.all([
             Todo.find({ user: userId }),
             Assignment.find({ user: userId, completed: false })
@@ -297,26 +264,9 @@ router.get('/metrics', auth, async (req, res) => {
         const pendingToday = todos.filter(t => !t.completed && t.dayPlan).length;
         const totalPending = todos.filter(t => !t.completed).length + assignments.length;
 
-        // Distraction Level: High if many pending today with zero progress, Low if some completed today
-        let distraction = "Moderate";
-        if (completedToday >= 2) distraction = "Low";
-        else if (pendingToday > 4 && completedToday === 0) distraction = "High";
-        else if (completedToday >= 1) distraction = "Minimal";
-
-        // Cognitive Load: Based on total pending across assignments and todos
-        let load = "Ideal";
-        if (totalPending > 10) load = "High";
-        else if (totalPending > 5) load = "Heavy";
-        else if (totalPending > 2) load = "Balanced";
-        else if (totalPending === 0) load = "Deep Rest";
-
-        // Flow Potential: Ratio of completion or just a logic based on progress
-        const totalToday = completedToday + pendingToday;
-        const flowPercent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
-        
-        // Base potential on progress but cap it realistically
-        let flowPotential = (80 + (completedToday * 2) - (pendingToday)).toString() + "%";
-        if (totalToday === 0) flowPotential = "85%"; // Ready to start
+        let distraction = completedToday >= 2 ? "Low" : pendingToday > 4 ? "High" : "Moderate";
+        let load = totalPending > 10 ? "High" : totalPending > 5 ? "Heavy" : "Balanced";
+        let flowPotential = (80 + (completedToday * 2) - pendingToday).toString() + "%";
 
         res.json({ distraction, load, flow: flowPotential });
     } catch (err) {
@@ -324,36 +274,32 @@ router.get('/metrics', auth, async (req, res) => {
     }
 });
 
-// 8. Personalized Student Daily Briefing
+// 8. Daily Briefing
 router.get('/briefing', auth, async (req, res) => {
     try {
         const userId = req.userId;
-        const now = new Date();
-        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        // Fetch user data context
         const [todos, assignments, notes] = await Promise.all([
             Todo.find({ user: userId, completed: false, dayPlan: true }),
-            Assignment.find({ user: userId, completed: false }).sort({ deadline: 1 }).limit(3).populate('subject', 'name'),
+            Assignment.find({ user: userId, completed: false }).sort({ deadline: 1 }).limit(3),
             Note.find({ user: userId }).sort({ updatedAt: -1 }).limit(2)
         ]);
 
-        const todoList = todos.map(t => t.title).join(', ');
-        const assignmentList = assignments.map(a => `${a.title} (due ${a.deadline.toDateString()})`).join(', ');
-        const recentNotes = notes.map(n => n.content.substring(0, 50)).join('; ');
+        const todoContext = todos.map(t => t.title).join(', ');
+        const assignmentContext = assignments.map(a => `${a.title} (due ${a.deadline.toDateString()})`).join(', ');
+        const noteContext = notes.map(n => n.content.substring(0, 50)).join('; ');
 
-        const prompt = `You are a high-performance study coach. Generate a concise, motivating "Daily Briefing" (max 100 words) for the student based on this data:
-        Today's Focus: ${todoList || 'No specific focus set yet'}
-        Upcoming Assignments: ${assignmentList || 'None soon'}
-        Recent Notes: ${recentNotes || 'No recent notes'}
-        
-        Format: Start with a personalized greeting, give a 1-sentence summary of the day's priority, and one high-energy motivation tip. Use a supportive, professional tone.`;
+        const prompt = `Generate a concise 80-word briefing for a student. 
+        Focus: ${todoContext || 'Clear'}
+        Assignments: ${assignmentContext || 'None'}
+        Notes: ${noteContext || 'None'}
+        Format: Greeting, priority highlight, and one motivational tip.`;
 
-        const model = getAIModel('gemini-1.5-flash', process.env.GEMINI_API_KEY);
-        const result = await model.generateContent(prompt);
-        const summary = result.response.text();
-
-        res.json({ briefing: summary });
+        try {
+            const summary = await callAI(prompt, "High-performance study coach.");
+            res.json({ briefing: summary });
+        } catch (e) {
+            res.json({ briefing: "Focus on your upcoming assignments and stay consistent with your habit tracker today!" });
+        }
     } catch (err) {
         res.status(500).json({ message: "Briefing error", error: err.message });
     }
@@ -362,15 +308,12 @@ router.get('/briefing', auth, async (req, res) => {
 // 9. Deep Work Insights
 router.get('/insights', auth, async (req, res) => {
     try {
-        const prompt = `Generate a unique, highly actionable "Deep Work Insight" or "Productivity Tip" for a university student. 
-        Focus on one of these areas: Deep Focus, Cognitive Load, Workspace Optimization, or Distraction Management.
-        Keep it to 2-3 sentences. Professional and motivating tone.`;
-
+        const prompt = "Generate one unique, 2-sentence deep work tip for a university student.";
         try {
-            const responseText = await callAI(prompt, "You are a performance coach for elite students.");
-            res.json({ insight: responseText.trim() });
+            const insight = await callAI(prompt, "Performance coach.");
+            res.json({ insight });
         } catch (e) {
-            res.json({ insight: "Distractions are the enemies of depth. Try a 20-minute 'digital blackout' to reset your focus levels." });
+            res.json({ insight: "Eliminate digital distractions for 90 minutes to achieve peak cognitive flow." });
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });

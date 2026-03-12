@@ -143,15 +143,17 @@ const AiChatPage = () => {
             {/* Backdrop for mobile sidebar */}
             {showSidebar && (
                 <div onClick={() => setShowSidebar(false)} style={{
-                    position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'none'
+                    position: 'fixed', inset: 0, background: 'rgba(5, 5, 20, 0.7)', backdropFilter: 'blur(8px)', zIndex: 150, transition: 'all 0.3s ease'
                 }} className="mobile-backdrop"></div>
             )}
 
             {/* Sidebar / History */}
-            <div className={`glass-card ai-sidebar ${showSidebar ? 'show' : ''}`} style={{ 
-                width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '1.25rem', 
-                background: 'rgba(15, 15, 35, 0.8)', border: '1px solid rgba(255, 255, 255, 0.05)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            <div className={`glass-card ai-sidebar \${showSidebar ? 'show' : ''}`} style={{ 
+                width: '320px', flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '1.5rem', 
+                background: 'rgba(10, 10, 25, 0.9)', border: '1px solid rgba(255, 255, 255, 0.08)',
+                transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
+                boxShadow: '20px 0 50px rgba(0,0,0,0.3)',
+                zIndex: 200
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                     <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -277,14 +279,15 @@ const AiChatPage = () => {
                             </div>
                         </div>
                         <button 
-                            className="mobile-info-btn"
+                            className="mobile-toggle-btn"
                             onClick={() => setShowSidebar(!showSidebar)}
                             style={{ 
-                                display: 'none', background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.2)', 
-                                color: '#818cf8', padding: '0.4rem', borderRadius: '8px', cursor: 'pointer' 
+                                display: 'none', background: 'rgba(129, 140, 248, 0.15)', border: '1px solid rgba(129, 140, 248, 0.3)', 
+                                color: '#818cf8', padding: '0.6rem', borderRadius: '10px', cursor: 'pointer',
+                                transition: 'all 0.2s ease'
                             }}
                         >
-                            <Brain size={18} />
+                            <Layout size={20} />
                         </button>
                     </div>
 
@@ -404,26 +407,33 @@ const AiChatPage = () => {
             </div>
 
             <style>{`
-                @media (max-width: 900px) {
+                @media (max-width: 1000px) {
                     .ai-sidebar {
                         position: fixed !important;
-                        right: -320px;
+                        left: -340px;
                         top: 0;
                         bottom: 0;
-                        z-index: 200;
-                        width: 280px !important;
-                        box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+                        height: 100vh !important;
+                        margin: 0 !important;
+                        border-radius: 0 24px 24px 0 !important;
                     }
                     .ai-sidebar.show {
-                        right: 0 !important;
+                        transform: translateX(340px) !important;
                     }
                     .mobile-backdrop { display: block !important; }
-                    .mobile-info-btn { display: flex !important; }
-                    .chat-layout { padding: 0.5rem !important; gap: 0 !important; }
+                    .mobile-toggle-btn { display: flex !important; }
+                    .chat-layout { padding: 0.75rem !important; gap: 0 !important; }
+                    .chat-main-container { border-radius: 20px !important; }
                 }
                 
-                .refresh-btn:hover { color: #818cf8 !important; transform: rotate(15deg); }
-                .refresh-btn:active { transform: scale(0.9); }
+                @media (max-width: 600px) {
+                    .chat-layout { padding: 0.5rem !important; }
+                    .chat-main-container { border-radius: 16px !important; }
+                    .message-bubble { max-width: 92% !important; }
+                }
+
+                .refresh-btn:hover { color: #818cf8 !important; transform: rotate(30deg); }
+                .refresh-btn:active { transform: scale(0.8); }
 
                 @keyframes pulse-glow {
                     0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
@@ -435,10 +445,12 @@ const AiChatPage = () => {
                 .hide-scrollbar::-webkit-scrollbar { display: none; }
                 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                 
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar { width: 5px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.1); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.2); }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.15); border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.3); }
+
+                .input:focus { border-color: #818cf8 !important; box-shadow: 0 0 15px rgba(129, 140, 248, 0.2) !important; }
             `}</style>
         </div>
     );
