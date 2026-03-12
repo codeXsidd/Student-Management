@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target, Image as ImageIcon, X, Paperclip } from 'lucide-react';
-import { aiChat } from '../services/api';
+import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target } from 'lucide-react';
+import API, { aiChat } from '../services/api';
 import toast from 'react-hot-toast';
 
 const AiChatPage = () => {
@@ -19,71 +19,42 @@ const AiChatPage = () => {
     });
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [insight, setInsight] = useState('Analyzing your study patterns to provide better suggestions...');
     const messagesEndRef = useRef(null);
-    const fileInputRef = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     useEffect(() => {
+        const fetchInsight = async () => {
+            try {
+                const res = await API.get('/ai/insights');
+                if (res.data.insight) setInsight(res.data.insight);
+            } catch (e) {
+                console.error("Failed to fetch insight");
+            }
+        };
+        fetchInsight();
+    }, []);
+
+    useEffect(() => {
         scrollToBottom();
         localStorage.setItem('study_chat_history', JSON.stringify(messages));
     }, [messages]);
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file && file.type.startsWith('image/')) {
-            setSelectedImage(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        } else if (file) {
-            toast.error("Please select an image file.");
-        }
-    };
-
-    const removeImage = () => {
-        setSelectedImage(null);
-        setImagePreview(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
     const handleSend = async (val = input) => {
         const text = val.trim();
-        if ((!text && !selectedImage) || loading) return;
+        if (!text || loading) return;
 
-        const userMsg = { 
-            id: Date.now().toString(), 
-            role: 'user', 
-            text: text || (selectedImage ? "Analyzed an image" : ""), 
-            image: imagePreview,
-            timestamp: new Date() 
-        };
-        
+        const userMsg = { id: Date.now().toString(), role: 'user', text: text, timestamp: new Date() };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
-        const currentImage = selectedImage;
-        removeImage();
         setLoading(true);
 
         try {
             const context = messages.slice(-5).map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`).join('\n');
-            
-            let res;
-            if (currentImage) {
-                const formData = new FormData();
-                formData.append('message', text);
-                formData.append('context', context);
-                formData.append('image', currentImage);
-                res = await aiChat(formData);
-            } else {
-                res = await aiChat({ message: text, context });
-            }
+            const res = await aiChat({ message: text, context });
 
             const aiMsg = {
                 id: (Date.now() + 1).toString(),
@@ -119,31 +90,63 @@ const AiChatPage = () => {
     };
 
     const samplePrompts = [
-        { title: "Explain a concept", text: "Explain the concept of 'Big O Notation' with a real-world analogy.", icon: <Brain size={16} /> },
-        { title: "Study Schedule", text: "I have 3 hours. Help me plan a study session for Math and Physics.", icon: <Clock size={16} /> },
-        { title: "Motivation", text: "Give me some motivation. I've been studying for 4 hours and feeling tired.", icon: <Zap size={16} /> },
-        { title: "Exam Prep", text: "How should I prepare for a multiple-choice exam coming up next week?", icon: <Target size={16} /> }
+        { title: "Explain a concept", text: "Explain the concept of 'Big O Notation' with a simple analogy.", icon: <Brain size={16} /> },
+        { title: "Study Schedule", text: "Help me create a 4-hour deep work schedule for my upcoming exam.", icon: <Clock size={16} /> },
+        { title: "Productivity", text: "What are the best techniques for maintaining a deep work state for 90 minutes?", icon: <Zap size={16} /> },
+        { title: "Workspace", text: "How can I optimize my workspace to minimize distractions and maximize focus?", icon: <Target size={16} /> },
+        { title: "Distraction Hack", text: "I'm getting distracted every 20 minutes! Help me enter a flow state.", icon: <Sparkles size={16} /> },
+        { title: "Performance", text: "How can I measure and improve my cognitive performance during study sessions?", icon: <Bot size={16} /> },
+        { title: "Exam Prep", text: "Create a strategic review plan for a comprehensive exam I have in 3 days.", icon: <MessageSquare size={16} /> }
     ];
 
     return (
         <div className="page-container animate-fade-in" style={{ display: 'flex', gap: '1.5rem', height: '100%', maxWidth: '1400px', margin: '0 auto', overflow: 'hidden', padding: '1rem' }}>
 
             {/* Sidebar / History (Desktop only) */}
-            <div className="glass-card hide-mobile" style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '1.25rem' }}>
+            <div className="glass-card hide-mobile" style={{ width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '1.25rem', background: 'rgba(15, 15, 35, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                 <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <MessageSquare size={16} /> AI Activity
+                    <Brain size={18} color="#818cf8" /> CURRENT INSIGHTS
                 </h3>
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }} className="hide-scrollbar">
-                    <div style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)' }}>
-                        <p style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>CURRENT STATUS</p>
-                        <p style={{ fontSize: '0.82rem', color: '#e2e8f0', lineHeight: 1.4 }}>Analyzing your study patterns to provide better suggestions.</p>
+                
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }} className="hide-scrollbar">
+                    {/* Deep Work State Indicator */}
+                    <div style={{ padding: '1.25rem', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))', border: '1px solid rgba(99,102,241,0.2)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                            <p style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700 }}>DEEP WORK STATE</p>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+                        </div>
+                        <p style={{ fontSize: '1.2rem', color: '#f8fafc', fontWeight: 800, marginBottom: 4 }}>Optimized</p>
+                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.4 }}>{insight}</p>
                     </div>
-                    <div>
-                        <p style={{ fontSize: '0.7rem', color: '#475569', textAlign: 'center', marginTop: '1rem', fontStyle: 'italic' }}>More tools coming soon!</p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <p style={{ fontSize: '0.7rem', color: '#475569', fontWeight: 800, textTransform: 'uppercase' }}>Focus Metrics</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#e2e8f0' }}>Distraction Level</span>
+                            <span style={{ fontSize: '0.8rem', color: '#f43f5e', fontWeight: 700 }}>Low</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#e2e8f0' }}>Cognitive Load</span>
+                            <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 700 }}>Balanced</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#e2e8f0' }}>Flow Potential</span>
+                            <span style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 700 }}>88%</span>
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: '0.5rem' }}>
+                        <h4 style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, marginBottom: '0.75rem' }}>TOPICS TO EXPLORE</h4>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            {['Productivity', 'Workspace', 'Memory Hack', 'Deep Work', 'Exam Strategy'].map(tag => (
+                                <span key={tag} style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.65rem', color: '#cbd5e1', fontWeight: 600 }}>#{tag}</span>
+                            ))}
+                        </div>
                     </div>
                 </div>
+
                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <button onClick={clearChat} style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <button onClick={clearChat} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.05)'}>
                         <Trash2 size={14} /> Clear History
                     </button>
                 </div>
@@ -208,11 +211,6 @@ const AiChatPage = () => {
                                     borderTopLeftRadius: msg.role === 'user' ? '18px' : '4px',
                                 }}>
                                     <p style={{ fontSize: '0.9rem', color: '#e2e8f0', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.text}</p>
-                                    {msg.image && (
-                                        <div style={{ marginTop: '0.75rem', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                            <img src={msg.image} alt="Uploaded" style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', display: 'block' }} />
-                                        </div>
-                                    )}
                                     <p style={{ fontSize: '0.6rem', color: '#64748b', marginTop: 6, textAlign: msg.role === 'user' ? 'right' : 'left', fontWeight: 600 }}>
                                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
@@ -235,17 +233,6 @@ const AiChatPage = () => {
 
                     {/* Input Area */}
                     <div style={{ padding: '1.25rem', background: 'rgba(0,0,0,0.25)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                        {imagePreview && (
-                            <div style={{ position: 'relative', width: 'fit-content', marginBottom: '1rem', borderRadius: '12px', overflow: 'hidden', border: '2px solid #6366f1' }}>
-                                <img src={imagePreview} alt="Preview" style={{ height: '80px', width: 'auto', display: 'block' }} />
-                                <button 
-                                    onClick={removeImage}
-                                    style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
-                                >
-                                    <X size={12} />
-                                </button>
-                            </div>
-                        )}
                         {messages.length >= 2 && messages.length < 6 && (
                             <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
                                 {samplePrompts.slice(2).map((p, i) => (
@@ -258,39 +245,18 @@ const AiChatPage = () => {
                                 ))}
                             </div>
                         )}
-                        <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
-                            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleImageChange}
-                                    accept="image/*"
-                                    style={{ display: 'none' }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current.click()}
-                                    style={{ 
-                                        position: 'absolute', left: '12px', background: 'none', border: 'none', color: '#94a3b8', 
-                                        cursor: 'pointer', padding: '4px', borderRadius: '8px', transition: 'all 0.2s'
-                                    }}
-                                    className="hover-bright"
-                                    title="Upload image"
-                                >
-                                    <Paperclip size={20} />
-                                </button>
-                                <input
-                                    className="input"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Message your study buddy..."
-                                    style={{ flex: 1, borderRadius: '14px', padding: '0.8rem 1.25rem 0.8rem 3rem', fontSize: '0.92rem', background: 'rgba(255,255,255,0.05)' }}
-                                    disabled={loading}
-                                />
-                            </div>
+                        <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} style={{ display: 'flex', gap: '0.75rem' }}>
+                            <input
+                                className="input"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="Message your study buddy..."
+                                style={{ flex: 1, borderRadius: '14px', padding: '0.8rem 1.25rem', fontSize: '0.92rem' }}
+                                disabled={loading}
+                            />
                             <button
                                 type="submit"
-                                disabled={loading || (!input.trim() && !selectedImage)}
+                                disabled={loading || !input.trim()}
                                 className="btn-primary"
                                 style={{ width: 46, height: 46, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '14px', flexShrink: 0, background: 'linear-gradient(135deg, #10b981, #6366f1)', border: 'none' }}
                             >

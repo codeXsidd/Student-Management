@@ -2,44 +2,6 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-
-// Configure Multer for image uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../uploads');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, `ai-upload-${Date.now()}${path.extname(file.originalname)}`);
-    }
-});
-const upload = multer({ 
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only images are allowed'));
-        }
-    }
-});
-
-// Helper to convert file to GoogleGenerativeAI.Part
-const fileToGenerativePart = (path, mimeType) => {
-    return {
-        inlineData: {
-            data: Buffer.from(fs.readFileSync(path)).toString("base64"),
-            mimeType
-        },
-    };
-};
 
 const getAIModel = (modelName, key, version = 'v1') => {
     try {
@@ -51,7 +13,7 @@ const getAIModel = (modelName, key, version = 'v1') => {
     }
 };
 
-const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.", imageParts = []) => {
+const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
     let key = process.env.GEMINI_API_KEY;
     if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
 
@@ -79,12 +41,7 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
             const activeModel = getAIModel(modelName, key, 'v1');
             if (!activeModel) continue;
 
-            const contentParts = [
-                { text: `${systemInstruction}\n\nStudent Input: ${prompt}` },
-                ...imageParts
-            ];
-
-            const result = await activeModel.generateContent(contentParts);
+            const result = await activeModel.generateContent(fullPrompt);
             const response = await result.response;
             const text = response.text();
 
@@ -212,41 +169,20 @@ router.post('/flashcards', auth, async (req, res) => {
 });
 
 
-// 3. AI Tutor (Chat) with Optional Image Support
-router.post('/chat', auth, upload.single('image'), async (req, res) => {
+// 3. AI Tutor (Chat)
+router.post('/chat', auth, async (req, res) => {
     try {
         const { message, context } = req.body;
-        if (!message && !req.file) return res.status(400).json({ message: "Message or image required" });
+        if (!message) return res.status(400).json({ message: "Message required" });
 
-        let prompt = message || "I've uploaded an image. What can you tell me about it?";
+        let prompt = `Student says: "${message}"\n`;
         if (context) prompt += `\nContext: ${context}`;
 
-        let imageParts = [];
-        if (req.file) {
-            imageParts = [fileToGenerativePart(req.file.path, req.file.mimetype)];
-        }
-
         try {
-            const responseText = await callAI(prompt, "You are a concise, highly knowledgeable, friendly tutor helping a university student in a Deep Focus Room. Keep answers under 3-4 short paragraphs. Explain concepts simply through analogies if possible.", imageParts);
-            
-            // Clean up uploaded file
-            if (req.file) {
-                fs.unlink(req.file.path, (err) => {
-                    if (err) console.error("Error deleting temp file:", err);
-                });
-            }
-
+            const responseText = await callAI(prompt, "You are a concise, highly knowledgeable, friendly tutor helping a university student in a Deep Focus Room. Keep answers under 3-4 short paragraphs. Explain concepts simply through analogies if possible.");
             res.json({ reply: responseText.trim() });
         } catch (e) {
             console.error('❌ AI Chat Detailed Error:', e);
-            
-            // Clean up uploaded file on error
-            if (req.file) {
-                fs.unlink(req.file.path, (err) => {
-                    if (err) console.error("Error deleting temp file on error:", err);
-                });
-            }
-
             // Professional Fallback with diagnostic info
             if (e.message === 'API_KEY_MISSING') {
                 res.json({ reply: "I'm currently in **Demonstration Mode**. To enable my full AI capabilities, please ensure the `GEMINI_API_KEY` is set in the Render environment variables." });
@@ -335,6 +271,24 @@ router.post('/gpa-strategy', auth, async (req, res) => {
                 advice: `To reach your ${targetCgpa} goal, you'll need to maintain around ${reqSgpa} SGPA. Focus on core subjects with high credits.`,
                 difficulty: reqSgpa > 9 ? "Hard" : reqSgpa > 7.5 ? "Moderate" : "Easy"
             });
+        }
+    } catch (err) {
+        res.status(500).json({ message: "AI Error", error: err.message });
+    }
+});
+
+// 7. Deep Work Insights
+router.get('/insights', auth, async (req, res) => {
+    try {
+        const prompt = `Generate a unique, highly actionable "Deep Work Insight" or "Productivity Tip" for a university student. 
+        Focus on one of these areas: Deep Focus, Cognitive Load, Workspace Optimization, or Distraction Management.
+        Keep it to 2-3 sentences. Professional and motivating tone.`;
+
+        try {
+            const responseText = await callAI(prompt, "You are a performance coach for elite students.");
+            res.json({ insight: responseText.trim() });
+        } catch (e) {
+            res.json({ insight: "Distractions are the enemies of depth. Try a 20-minute 'digital blackout' to reset your focus levels." });
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });
