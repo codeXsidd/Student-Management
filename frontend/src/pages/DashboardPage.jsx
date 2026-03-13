@@ -156,9 +156,14 @@ const DashboardPage = () => {
             const context = `Student has ${urgentCount} urgent deadlines, ${dashboardTodos.length} focus tasks, and ${currentClass ? `is in class ${currentClass.subject}` : 'is free right now'}. Current time: ${now.toLocaleTimeString()}.`;
             const prompt = `Give me one short (max 15 words), high-energy, personalized productivity sentence for my dashboard. Mention a specific tool from: [Focus Room, Pomodoro, Planner, Habits, Journal] if relevant.`;
             const res = await aiChat({ message: prompt, context });
-            setAiInsight(res.data.reply);
+            const reply = res.data.reply;
+            if (reply && reply.length > 5) {
+                setAiInsight(reply);
+            } else {
+                throw new Error("Invalid response");
+            }
         } catch {
-            setAiInsight("Consistency is the key to mastery. Open the **AI Assistant** to deep dive into your study plan!");
+            setAiInsight("Deep work is the superpower of the 21st century. Open the **AI Assistant** to optimize your flow!");
         }
         setInsightLoading(false);
     };

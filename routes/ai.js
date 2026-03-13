@@ -39,7 +39,6 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
         { name: "gemini-1.5-flash", sdk: 'stable' },
         { name: "gemini-2.0-flash", sdk: 'interactions' },
         { name: "gemini-3-flash-preview", sdk: 'interactions' },
-        { name: "gemini-1.5-flash", sdk: 'interactions' }
     ];
 
     let lastError = null;
@@ -83,27 +82,32 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
             }
         } catch (err) {
             lastError = err;
-            const errMsg = err.message || "";
+            const errMsg = (err.message || "").toLowerCase();
             console.warn(`⚠️ Model ${modelConfig.name} failed:`, errMsg);
 
-            // If it's an auth error, we should stop and tell the user
-            if (errMsg.includes('401') || errMsg.includes('API_KEY_INVALID') || errMsg.includes('unauthenticated')) {
+            // Improved detection for invalid API key
+            if (errMsg.includes('401') || 
+                errMsg.includes('api key not valid') || 
+                errMsg.includes('invalid') || 
+                errMsg.includes('unauthenticated') ||
+                errMsg.includes('apikey_invalid')) {
                 throw new Error("API_KEY_INVALID");
             }
             
-            if (errMsg.includes('429')) {
+            if (errMsg.includes('429') || errMsg.includes('quota')) {
                 console.log("Throttled. Trying next fallback...");
                 continue;
             }
         }
     }
 
-    // Fallback error
-    const finalErrorMessage = lastError ? lastError.message : "Connection failed to all Gemini models.";
-    if (finalErrorMessage.includes('401') || finalErrorMessage.includes('API_KEY_INVALID')) {
+    // Final fallback error check
+    const finalMsg = (lastError?.message || "").toLowerCase();
+    if (finalMsg.includes('401') || finalMsg.includes('api key not valid') || finalMsg.includes('key')) {
         throw new Error("API_KEY_INVALID");
     }
-    throw new Error(finalErrorMessage);
+    
+    throw new Error(lastError?.message || "Connection failed to all Gemini models.");
 };
 
 // Helper to extract JSON from AI response safely
