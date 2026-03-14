@@ -27,45 +27,55 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
     const client = getClient(key);
     if (!client) throw new Error("AI_CLIENT_INITIALIZATION_FAILED");
 
-    // Standardized models for the new Interactions API
+    // Valid model names for the current Gemini API in 2026
     const models = [
         "gemini-3-flash-preview",
         "gemini-2.0-flash",
-        "gemini-1.5-flash"
+        "gemini-1.5-flash",
+        "gemini-1.5-pro"
     ];
 
     let lastError = null;
 
+    // Try each model using the new syntax
     for (const modelName of models) {
         try {
-            console.log(`🤖 AI Attempt: ${modelName} via Interactions API`);
-
+            console.log(`🤖 AI Attempt: ${modelName} via @google/genai`);
+            
             const interaction = await client.interactions.create({
                 model: modelName,
                 input: `${systemInstruction}\n\nStudent Input: ${prompt}`,
             });
 
-            // Using the specific output path provided in the user's sample
+            // Extract text from the new interaction output structure
             if (interaction && interaction.outputs && interaction.outputs.length > 0) {
-                const responseText = interaction.outputs[interaction.outputs.length - 1].text;
-                if (responseText) {
+                const text = interaction.outputs[interaction.outputs.length - 1].text;
+                if (text) {
                     console.log(`✅ AI Success: ${modelName}`);
-                    return responseText.trim();
+                    return text.trim();
                 }
             }
         } catch (err) {
             lastError = err;
-            console.warn(`⚠️ Model ${modelName} failed:`, err.message);
+            console.error(`❌ Model ${modelName} failed:`, err.message);
+            if (err.stack) console.error(err.stack);
 
+            // Handle invalid API key specifically
             if (err.message.toLowerCase().includes('api key') ||
+                err.message.toLowerCase().includes('apikey_invalid') ||
                 err.message.toLowerCase().includes('401')) {
                 throw new Error("Invalid Gemini API Key. Please verify your credentials.");
             }
+
+            // Continue to next model
             continue;
         }
     }
 
-    throw new Error(lastError ? lastError.message : "Failed to connect to Gemini models.");
+    // Fallback error if everything failed
+    console.error("❌ CRITICAL: ALL AI MODELS FAILED.");
+    const finalErrorMessage = lastError ? lastError.message : "Connection failed to all Gemini models.";
+    throw new Error(`${finalErrorMessage}. Please check your API key and network connection.`);
 };
 
 // Helper to extract JSON from AI response safely
@@ -306,45 +316,6 @@ router.get('/insights', auth, async (req, res) => {
         }
     } catch (err) {
         res.status(500).json({ message: "AI Error", error: err.message });
-    }
-});
-
-// 10. AI Mastery Roadmap Generator
-router.post('/roadmap', auth, async (req, res) => {
-    try {
-        const { topic, level } = req.body;
-        if (!topic) return res.status(400).json({ message: "Topic required" });
-
-        const prompt = `Create a high-intensity, 7-day mastery roadmap for the student to learn: "${topic}".
-        Target level: ${level || 'Beginner to Intermediate'}.
-        For each day, provide a 'focus' and a 'challenge'.
-        Return EXACTLY this JSON format:
-        {
-            "topic": "${topic}",
-            "overview": "A brief overview...",
-            "roadmap": [
-                {"day": 1, "focus": "...", "challenge": "..."},
-                ...
-            ]
-        }`;
-
-        try {
-            const responseText = await callAI(prompt, "Expert educational consultant. Return raw JSON.");
-            res.json(extractJson(responseText));
-        } catch (e) {
-            // Fallback
-            res.json({
-                topic,
-                overview: "Your roadmap to mastering " + topic,
-                roadmap: Array.from({ length: 7 }, (_, i) => ({
-                    day: i + 1,
-                    focus: `Core concept ${i + 1} of ${topic}`,
-                    challenge: `Practical exercise for ${topic} phase ${i + 1}`
-                }))
-            });
-        }
-    } catch (err) {
-        res.status(500).json({ message: "Roadmap Error", error: err.message });
     }
 });
 
