@@ -96,7 +96,8 @@ const AiChatPage = () => {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
                 text: res.data.reply,
-                timestamp: new Date()
+                timestamp: new Date(),
+                error: res.data.error
             };
             setMessages(prev => [...prev, aiMsg]);
         } catch (error) {
@@ -138,16 +139,7 @@ const AiChatPage = () => {
     const topicsToExplore = ['Productivity', 'Workspace', 'Memory Hack', 'Deep Work', 'Exam Strategy'];
 
     return (
-        <div className="page-container animate-fade-in chat-layout" style={{ 
-            display: 'flex', 
-            gap: '1.5rem', 
-            height: 'calc(100vh - 120px)', 
-            maxWidth: '1400px', 
-            margin: '0 auto', 
-            overflow: 'hidden', 
-            padding: '1rem', 
-            position: 'relative' 
-        }}>
+        <div className="page-container animate-fade-in chat-layout" style={{ display: 'flex', gap: '1.5rem', height: '100%', maxWidth: '1400px', margin: '0 auto', overflow: 'hidden', padding: '1rem', position: 'relative' }}>
 
             {/* Backdrop for mobile sidebar */}
             {showSidebar && (
@@ -157,14 +149,11 @@ const AiChatPage = () => {
             )}
 
             {/* Sidebar / History */}
-            <div className={`glass-card ai-sidebar ${showSidebar ? 'show' : ''}`} style={{ 
+            <div className={`glass-card ai-sidebar \${showSidebar ? 'show' : ''}`} style={{ 
                 width: '320px', flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '1.5rem', 
-                background: 'rgba(10, 10, 25, 0.7)', 
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '24px',
+                background: 'rgba(10, 10, 25, 0.9)', border: '1px solid rgba(255, 255, 255, 0.08)',
                 transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                boxShadow: '20px 0 50px rgba(0,0,0,0.3)',
                 zIndex: 200
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -345,6 +334,11 @@ const AiChatPage = () => {
                                     borderTopLeftRadius: msg.role === 'user' ? '16px' : '4px',
                                 }}>
                                     <p style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                                    {msg.error && (
+                                        <p style={{ fontSize: '0.7rem', color: '#f43f5e', marginTop: 8, padding: '4px 8px', borderRadius: '4px', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)' }}>
+                                            Debug Info: {msg.error}
+                                        </p>
+                                    )}
                                     <p style={{ fontSize: '0.55rem', color: '#64748b', marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left', fontWeight: 600 }}>
                                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
@@ -419,7 +413,7 @@ const AiChatPage = () => {
             </div>
 
             <style>{`
-                @media (max-width: 1100px) {
+                @media (max-width: 1000px) {
                     .ai-sidebar {
                         position: fixed !important;
                         left: -340px;
@@ -428,60 +422,58 @@ const AiChatPage = () => {
                         height: 100vh !important;
                         margin: 0 !important;
                         border-radius: 0 24px 24px 0 !important;
-                        padding-top: 5rem !important;
+                        z-index: 2000 !important;
                     }
                     .ai-sidebar.show {
                         transform: translateX(340px) !important;
                     }
-                    .mobile-backdrop { display: block !important; }
+                    .mobile-backdrop { display: block !important; z-index: 1500 !important; }
                     .mobile-toggle-btn { display: flex !important; }
-                    .chat-layout { padding: 0.75rem !important; gap: 0 !important; }
+                    .chat-layout { padding: 0.5rem !important; gap: 0 !important; }
                     .chat-main-container { border-radius: 20px !important; }
+                    .chat-layout { height: calc(100vh - 80px) !important; }
                 }
                 
-                @media (max-width: 650px) {
-                    .chat-layout { padding: 0.5rem !important; height: calc(100vh - 80px) !important; }
-                    .chat-main-container { border-radius: 16px !important; }
+                @media (max-width: 600px) {
+                    .chat-layout { padding: 0.25rem !important; }
+                    .chat-main-container { border-radius: 12px !important; }
                     .message-bubble { max-width: 95% !important; }
-                    .quick-actions-container { gap: 0.4rem !important; }
-                    .quick-action-btn { padding: 0.4rem 0.7rem !important; font-size: 0.65rem !important; }
+                    .chat-main-container h2 { fontSize: 0.8rem !important; }
+                    .chat-main-container { height: 100% !important; }
                 }
 
-                .refresh-btn:hover { color: #818cf8 !important; transform: rotate(180deg); transition: all 0.5s ease; }
+                .refresh-btn:hover { color: #818cf8 !important; transform: rotate(30deg); }
                 .refresh-btn:active { transform: scale(0.8); }
 
                 @keyframes pulse-glow {
                     0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
-                    50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+                    50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
                     100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
                 }
                 .pulse-glow { animation: pulse-glow 2s infinite; }
-
-                @keyframes float {
-                    0% { transform: translateY(0px); }
-                    50% { transform: translateY(-5px); }
-                    100% { transform: translateY(0px); }
-                }
-                .float-anim { animation: float 3s ease-in-out infinite; }
                 
                 .hide-scrollbar::-webkit-scrollbar { display: none; }
                 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                 
-                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.1); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.25); }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.15); border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.3); }
 
-                .input:focus { border-color: #818cf8 !important; box-shadow: 0 0 20px rgba(129, 140, 248, 0.15) !important; outline: none; }
+                .input:focus { border-color: #818cf8 !important; box-shadow: 0 0 15px rgba(129, 140, 248, 0.2) !important; }
                 
-                .message-anim { animation: messageIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-                @keyframes messageIn {
-                    from { opacity: 0; transform: translateY(10px) scale(0.95); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
+                .spinner-small {
+                    border: 2px solid rgba(16, 185, 129, 0.1);
+                    border-radius: 50%;
+                    border-top: 2px solid #10b981;
+                    width: 14px;
+                    height: 14px;
+                    animation: spin 1s linear infinite;
                 }
-
-                .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99,102,241,0.3); }
-                .btn-primary:active { transform: translateY(0); }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
             `}</style>
         </div>
     );

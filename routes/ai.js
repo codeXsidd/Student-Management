@@ -19,7 +19,10 @@ const getClient = (key) => {
 
 const callAI = async (prompt, systemInstruction = "You are a helpful AI study assistant.") => {
     let key = process.env.GEMINI_API_KEY;
-    if (!key || key.trim() === "") throw new Error("API_KEY_MISSING");
+    if (!key || key.trim() === "") {
+        console.error("❌ GEMINI_API_KEY is missing in .env");
+        throw new Error("API_KEY_MISSING");
+    }
 
     // Cleaning API Key
     key = key.trim().replace(/^["']|["']$/g, '');
@@ -27,7 +30,7 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
     const client = getClient(key);
     if (!client) throw new Error("AI_CLIENT_INITIALIZATION_FAILED");
 
-    // Standardized models for the new Interactions API
+    // Preferred models for the new Interactions API
     const models = [
         "gemini-3-flash-preview",
         "gemini-2.0-flash",
@@ -38,34 +41,33 @@ const callAI = async (prompt, systemInstruction = "You are a helpful AI study as
 
     for (const modelName of models) {
         try {
-            console.log(`🤖 AI Attempt: ${modelName} via Interactions API`);
+            console.log(`🤖 AI Attempting model: ${modelName}`);
             
             const interaction = await client.interactions.create({
                 model: modelName,
-                input: `${systemInstruction}\n\nStudent Input: ${prompt}`,
+                input: `${systemInstruction}\n\nUser Question: ${prompt}`,
             });
 
-            // Using the specific output path provided in the user's sample
             if (interaction && interaction.outputs && interaction.outputs.length > 0) {
                 const responseText = interaction.outputs[interaction.outputs.length - 1].text;
                 if (responseText) {
-                    console.log(`✅ AI Success: ${modelName}`);
+                    console.log(`✅ AI Success using: ${modelName}`);
                     return responseText.trim();
                 }
             }
+            console.warn(`⚠️ Model ${modelName} returned no output.`);
         } catch (err) {
             lastError = err;
-            console.warn(`⚠️ Model ${modelName} failed:`, err.message);
+            console.error(`❌ Model ${modelName} Error:`, err.message);
 
-            if (err.message.toLowerCase().includes('api key') ||
-                err.message.toLowerCase().includes('401')) {
+            if (err.message.toLowerCase().includes('api key') || err.message.toLowerCase().includes('401')) {
                 throw new Error("Invalid Gemini API Key. Please verify your credentials.");
             }
-            continue;
+            // Continue to next fallback model
         }
     }
 
-    throw new Error(lastError ? lastError.message : "Failed to connect to Gemini models.");
+    throw new Error(lastError ? lastError.message : "All AI models failed to respond.");
 };
 
 // Helper to extract JSON from AI response safely
@@ -157,10 +159,14 @@ router.post('/chat', auth, async (req, res) => {
             const responseText = await callAI(prompt, "You are a concise, highly knowledgeable, friendly tutor helping a university student. Keep answers under 3 short paragraphs. Use analogies.");
             res.json({ reply: responseText.trim() });
         } catch (e) {
+            console.error("AI Chat Route Error:", e.message);
             if (e.message === 'API_KEY_MISSING') {
                 res.json({ reply: "I'm currently in **Demonstration Mode**. Please configure the `GEMINI_API_KEY` to enable my full intelligence." });
             } else {
-                res.json({ reply: "I'm experiencing a brief connection issue. Try asking me again in a few seconds." });
+                res.json({ 
+                    reply: "I'm experiencing a brief connection issue. Try asking me again in a few seconds.",
+                    error: e.message 
+                });
             }
         }
     } catch (err) {
