@@ -69,11 +69,19 @@ const FocusRoomPage = () => {
         if (!chatMsg.trim()) return;
         setChatting(true);
         const userText = chatMsg.trim();
-        setChatLog([...chatLog, { role: 'user', text: userText }]);
+        const newUserMsg = { role: 'user', text: userText };
+        setChatLog(prev => [...prev, newUserMsg]);
         setChatMsg('');
 
         try {
-            const context = priorityTask ? `The student is currently working on: ${priorityTask.title}` : '';
+            // Build conversational history for context
+            const history = chatLog.slice(-6).map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`).join('\n');
+            const context = `
+Current Task: ${priorityTask ? priorityTask.title : 'General Study'}
+Conversational History:
+${history}
+            `.trim();
+
             const res = await aiChat({ message: userText, context });
             setChatLog(prev => [...prev, { role: 'ai', text: res.data.reply }]);
         } catch (error) {
