@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Target, Plus, Check, Trash2, Calendar, Star, Layout, ListTodo, Sun, Coffee, Brain, Sparkles, ChevronRight, X, AlertCircle, Bot } from 'lucide-react';
-import API from '../services/api';
+import API, { addXP } from '../services/api';
+import { breakDownTask } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import TaskMatchmaker from '../components/TaskMatchmaker';
 import DopamineVault from '../components/DopamineVault';
 
 const DailyPlannerPage = () => {
+    const { updateUserXP } = useAuth();
     const [allTodos, setAllTodos] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -83,7 +86,19 @@ const DailyPlannerPage = () => {
         try {
             const res = await API.put(`/todos/${todo._id}`, { completed: !todo.completed, dayPlan: false });
             setAllTodos(allTodos.map(t => t._id === todo._id ? res.data : t));
-            if (!todo.completed) toast.success('Awesome! Task done! ✅');
+            
+            if (!todo.completed) {
+                toast.success('Awesome! Task done! ✅');
+                // Reward XP for completing a task
+                addXP({ xpToAdd: 15 }).then(res => {
+                    updateUserXP(res.data.xp, res.data.level);
+                    if (res.data.leveledUp) {
+                        toast.success(`🎉 Level Up! You are now level ${res.data.level}!`, { duration: 5000, icon: '🌟' });
+                    } else {
+                        toast.success(`+15 XP for completing your focus task!`, { icon: '✨' });
+                    }
+                }).catch(() => {});
+            }
         } catch { toast.error('Update failed'); }
     };
 

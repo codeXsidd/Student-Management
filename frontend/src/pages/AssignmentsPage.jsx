@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getSubjects, getAssignments, addAssignment, updateAssignment, deleteAssignment } from '../services/api';
+import { getSubjects, getAssignments, addAssignment, updateAssignment, deleteAssignment, addXP } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { ListTodo, Plus, Trash2, CheckCircle, Circle, Clock, ChevronDown, Filter } from 'lucide-react';
 
@@ -7,6 +8,7 @@ const PRIORITIES = ['low', 'medium', 'high'];
 const priorityColor = { low: '#10b981', medium: '#f59e0b', high: '#ef4444' };
 
 const AssignmentsPage = () => {
+    const { updateUserXP } = useAuth();
     const [assignments, setAssignments] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [filter, setFilter] = useState('all');
@@ -46,7 +48,20 @@ const AssignmentsPage = () => {
         try {
             const res = await updateAssignment(id, { completed: !current });
             setAssignments(assignments.map(a => a._id === id ? res.data : a));
-            toast.success(!current ? '✅ Marked as done!' : 'Marked as pending');
+            
+            if (!current) {
+                toast.success('Awesome work! Assignment completed! ✅');
+                addXP({ xpToAdd: 50 }).then(xpRes => {
+                    updateUserXP(xpRes.data.xp, xpRes.data.level);
+                    if (xpRes.data.leveledUp) {
+                        toast.success(`🎉 Level Up! You are now level ${xpRes.data.level}!`, { duration: 5000, icon: '🌟' });
+                    } else {
+                        toast.success(`+50 XP for grinding through your assignment!`, { icon: '✨' });
+                    }
+                }).catch(() => {});
+            } else {
+                toast.success('Marked as pending');
+            }
         } catch { toast.error('Failed to update'); }
     };
 

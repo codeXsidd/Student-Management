@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getHabits, createHabit, updateHabit, deleteHabit, toggleHabit } from '../services/api';
+import { getHabits, createHabit, updateHabit, deleteHabit, toggleHabit, addXP } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Activity, Plus, Edit2, Trash2, CheckCircle2, Circle, Flame, Target, Trophy, X, Zap, Calendar } from 'lucide-react';
 
 const HabitBuilderPage = () => {
+    const { updateUserXP } = useAuth();
     const [habits, setHabits] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -82,6 +84,20 @@ const HabitBuilderPage = () => {
             // Send local ISO string to ensure the backend gets the right intent
             const res = await toggleHabit(id, today.toISOString());
             setHabits(prev => prev.map(h => h._id === id ? res.data : h));
+
+            const isNowCompleted = res.data.completedDates.some(d => getDateStr(d) === dateStr);
+            if (isNowCompleted) {
+                toast.success('Habit logged! ✅');
+                addXP({ xpToAdd: 20 }).then(xpRes => {
+                    updateUserXP(xpRes.data.xp, xpRes.data.level);
+                    if (xpRes.data.leveledUp) {
+                        toast.success(`🎉 Level Up! You are now level ${xpRes.data.level}!`, { duration: 5000, icon: '🌟' });
+                    } else {
+                        toast.success(`+20 XP for logging your habit!`, { icon: '✨' });
+                    }
+                }).catch(() => {});
+            }
+
         } catch (err) {
             toast.error('Failed to update habit');
             fetchHabits();

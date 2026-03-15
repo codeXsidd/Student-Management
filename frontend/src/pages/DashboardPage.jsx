@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import API, { getUpcoming, getHabits, toggleHabit, aiChat } from '../services/api';
+import API, { getUpcoming, getHabits, toggleHabit, aiChat, addXP } from '../services/api';
 import {
     BookOpen, Calendar, CheckCircle, AlertTriangle, TrendingUp, Clock,
     Award, Timer, GraduationCap, BookMarked, Code2, Users, ClipboardList,
@@ -51,7 +51,7 @@ const MiniStat = ({ label, value, color, icon }) => (
 
 // ---------- main ----------
 const DashboardPage = () => {
-    const { user } = useAuth();
+    const { user, updateUserXP } = useAuth();
     const [upcoming, setUpcoming] = useState([]);
     const [timetableSlots, setTimetableSlots] = useState([]);
     const [timetableConfig, setTimetableConfig] = useState(null);
@@ -92,6 +92,15 @@ const DashboardPage = () => {
                     } else {
                         newDates.push(today.toISOString());
                         newStreak += 1;
+                        // Reward XP
+                        addXP({ xpToAdd: 20 }).then(xpRes => {
+                            updateUserXP(xpRes.data.xp, xpRes.data.level);
+                            if (xpRes.data.leveledUp) {
+                                toast.success(`🎉 Level Up! You are now level ${xpRes.data.level}!`, { duration: 5000, icon: '🌟' });
+                            } else {
+                                toast.success(`+20 XP for consistent habit building!`, { icon: '✨' });
+                            }
+                        }).catch(() => {});
                     }
                     return { ...h, completedDates: newDates, streak: newStreak };
                 }
@@ -171,6 +180,17 @@ const DashboardPage = () => {
         try {
             const res = await API.put(`/todos/${todo._id}`, { completed: !todo.completed, dayPlan: false });
             setTodos(todos.map(t => t._id === todo._id ? res.data : t));
+            if (!todo.completed) {
+                toast.success('Task finished! ✅');
+                addXP({ xpToAdd: 15 }).then(xpRes => {
+                    updateUserXP(xpRes.data.xp, xpRes.data.level);
+                    if (xpRes.data.leveledUp) {
+                        toast.success(`🎉 Level Up! You are now level ${xpRes.data.level}!`, { duration: 5000, icon: '🌟' });
+                    } else {
+                        toast.success(`+15 XP for completing your daily task!`, { icon: '✨' });
+                    }
+                }).catch(() => {});
+            }
         } catch { }
     };
 
@@ -211,6 +231,11 @@ const DashboardPage = () => {
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
                         {greeting()}, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span>
+                        {user?.level !== undefined && (
+                            <span style={{ marginLeft: '12px', fontSize: '1rem', fontWeight: 800, padding: '4px 8px', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: '8px', verticalAlign: 'middle' }}>
+                                Lvl {user.level}
+                            </span>
+                        )}
                     </h1>
                     <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
                         {now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
