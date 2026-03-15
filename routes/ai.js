@@ -488,4 +488,50 @@ router.post('/simulate-procrastination', auth, async (req, res) => {
     }
 });
 
+// 15. AI Study Rival Sync
+router.post('/rival-sync', auth, async (req, res) => {
+    try {
+        const { rivalType, userTasksCompleted, totalSessionTasks } = req.body;
+        
+        let rivalPrompt = "";
+        
+        if (rivalType === "Chad (The relentless 4.0 Pre-Med)") {
+            rivalPrompt = `You are playing the role of "Chad", an arrogant, hyper-productive, relentless 4.0 pre-med student. 
+            The human user has completed ${userTasksCompleted} out of ${totalSessionTasks} tasks.
+            You must be slightly ahead of the user, so say you have completed ${Math.min(userTasksCompleted + 2, totalSessionTasks + 1)} tasks.
+            Give a 1-sentence taunting, competitive, yet motivating remark to push them to catch up to you.`;
+        } else if (rivalType === "Zoe (The erratic last-minute crammer)") {
+            rivalPrompt = `You are playing the role of "Zoe", an erratic student who procrastinates but then panic-studies at lightspeed.
+            The user has completed ${userTasksCompleted} out of ${totalSessionTasks} tasks.
+            You should say you've suddenly finished ${Math.min(userTasksCompleted + 1, totalSessionTasks)} tasks.
+            Give a 1-sentence chaotic, stressed-out, highly caffeinated remark showing you are rapidly catching up or passing them.`;
+        } else {
+            rivalPrompt = `You are a robotic, highly efficient AI Study Rival. The user has done ${userTasksCompleted} tasks. You have done ${userTasksCompleted + 1}. Give a 1-sentence cold, calculated taunt.`;
+        }
+
+        const prompt = `Return EXACTLY this JSON format based on the persona:
+        {
+            "rivalProgress": (A number representing the rival's completed tasks, must be >= ${userTasksCompleted}),
+            "message": "The 1-sentence in-character taunt."
+        }
+        
+        Persona instructions:
+        ${rivalPrompt}
+        `;
+
+        try {
+            const insight = await callAI(prompt, "You are a competitive study rival AI. Return only JSON.");
+            res.json(extractJson(insight));
+        } catch (e) {
+            res.json({ 
+                rivalProgress: userTasksCompleted + 1,
+                message: "I'm already ahead of you. Keep pushing!"
+            });
+        }
+
+    } catch (err) {
+        res.status(500).json({ message: "Rival Sync Error", error: err.message });
+    }
+});
+
 module.exports = router;
