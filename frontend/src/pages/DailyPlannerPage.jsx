@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import TaskMatchmaker from '../components/TaskMatchmaker';
 import DopamineVault from '../components/DopamineVault';
+import ProcrastinationSimulator from '../components/ProcrastinationSimulator';
 
 const DailyPlannerPage = () => {
     const { updateUserXP } = useAuth();
@@ -187,6 +188,7 @@ const DailyPlannerPage = () => {
             <div className="dashboard-grid-hero" style={{ gap: '2rem' }}>
                 {/* ── LEFT COLUMN: THE ACTIVE DAY PLAN ── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <ProcrastinationSimulator defaultTask={potentialTasks.length > 0 ? potentialTasks[0].title : ''} />
                     <DopamineVault tasksCompletedCount={completedToday.length} />
                     <TaskMatchmaker />
                     <div className="glass-card glow-anim" style={{ padding: '1.5rem', background: 'rgba(99,102,241,0.08)' }}>

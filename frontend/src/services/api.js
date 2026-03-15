@@ -68,3 +68,4 @@ export const getDailyBriefing = () => API.get('/ai/briefing');
 export const matchTask = (data) => API.post('/ai/match-task', data);
 export const lockVault = (data) => API.post('/ai/vault/lock', data);
 export const breakVault = (data) => API.post('/ai/vault/break', data);
+export const simulateProcrastination = (data) => API.post('/ai/simulate-procrastination', data);

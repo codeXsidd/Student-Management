@@ -455,4 +455,37 @@ router.post('/vault/break', auth, async (req, res) => {
     }
 });
 
+// 14. Procrastination Simulator (The Butterfly Effect)
+router.post('/simulate-procrastination', auth, async (req, res) => {
+    try {
+        const { taskTitle } = req.body;
+        if (!taskTitle) return res.status(400).json({ message: "Task title is required" });
+
+        const prompt = `A university student is considering skipping or procrastinating on this specific task: "${taskTitle}".
+        Generate a "Butterfly Effect" narrative showing the cascading negative consequences of skipping this single session.
+        Keep it slightly exaggerated and humorous, but genuinely motivating based on the fear of missing out on their potential.
+        
+        Return EXACTLY this JSON format:
+        {
+            "oneWeek": "The consequence after 1 week (e.g., failing a quiz, stressing over a deadline).",
+            "oneMonth": "The consequence after 1 month (e.g., bombing a midterm, dropping an elective to catch up).",
+            "oneYear": "The consequence after 1 year (e.g., losing a dream internship, entirely changing majors)."
+        }`;
+
+        try {
+            const insight = await callAI(prompt, "You are a dramatic, terrifying narrator showing alternate future timelines to stop procrastination. Return only JSON.");
+            res.json(extractJson(insight));
+        } catch (e) {
+            res.json({ 
+                oneWeek: "You fall behind immediately and have to cram all weekend.",
+                oneMonth: "Your grade drops severely, causing massive stress.",
+                oneYear: "You look back and regret not having the discipline to do this simple task."
+            });
+        }
+
+    } catch (err) {
+        res.status(500).json({ message: "Simulator Error", error: err.message });
+    }
+});
+
 module.exports = router;
