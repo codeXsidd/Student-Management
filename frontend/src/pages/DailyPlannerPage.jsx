@@ -4,9 +4,7 @@ import API, { addXP } from '../services/api';
 import { breakDownTask } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import TaskMatchmaker from '../components/TaskMatchmaker';
-import DopamineVault from '../components/DopamineVault';
-import ProcrastinationSimulator from '../components/ProcrastinationSimulator';
+
 
 const DailyPlannerPage = () => {
     const { updateUserXP } = useAuth();
@@ -404,26 +402,6 @@ const DailyPlannerPage = () => {
                             Focus on "Deep Work" sessions. Click on any priority tag to cycle between High, Medium, and Low.
                         </p>
                     </div>
-                </div>
-            </div>
-
-            {/* ── AI PRODUCTIVITY ARSENAL (BOTTOM SECTION) ── */}
-            <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1.5rem' }}>
-                    <Sparkles size={24} color="#a855f7" />
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800, background: 'linear-gradient(to right, #c084fc, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        AI Productivity Arsenal
-                    </h2>
-                </div>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '2rem' }}>
-                    Leverage your digital assistants to overcome procrastination, unlock dopamine, and find your next best task.
-                </p>
-                
-                {/* 3-Column AI Tools Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
-                    <TaskMatchmaker />
-                    <DopamineVault tasksCompletedCount={completedToday.length} />
-                    <ProcrastinationSimulator defaultTask={potentialTasks.length > 0 ? potentialTasks[0].title : ''} />
                 </div>
             </div>
 

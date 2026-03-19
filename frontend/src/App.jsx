@@ -26,6 +26,7 @@ import FocusRoomPage from './pages/FocusRoomPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AiChatPage from './pages/AiChatPage';
 import AiMindSweepPage from './pages/AiMindSweepPage';
+import AiArsenalPage from './pages/AiArsenalPage';
 
 const Layout = ({ children }) => {
     const { pathname } = useLocation();
@@ -77,6 +78,7 @@ const AppRoutes = () => {
             <Route path="/analytics" element={<P><AnalyticsPage /></P>} />
             <Route path="/ai-chat" element={<P><AiChatPage /></P>} />
             <Route path="/mind-sweep" element={<P><AiMindSweepPage /></P>} />
+            <Route path="/arsenal" element={<P><AiArsenalPage /></P>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
