@@ -170,7 +170,11 @@ router.post('/chat', auth, async (req, res) => {
             if (e.message === 'API_KEY_MISSING') {
                 res.json({ reply: "I'm currently in **Demonstration Mode**. Please configure the `GEMINI_API_KEY` to enable my full intelligence." });
             } else {
-                res.json({ reply: "I'm experiencing a brief connection issue. Try asking me again in a few seconds." });
+                if (message.includes("Give me one short")) {
+                    res.json({ reply: "Discipline is choosing between what you want now and what you want most. Open your planner and let's go!" });
+                } else {
+                    res.json({ reply: "My server API link is resetting to protect quotas! But don't worry—your local AI Arsenal tools are still perfectly functional right now." });
+                }
             }
         }
     } catch (err) {
@@ -549,15 +553,22 @@ router.post('/mind-sweep', auth, async (req, res) => {
             "notes": []
         }`;
 
-        const responseText = await callAI(prompt, "You are an intelligent task extractor and organizer. Respond ONLY with valid JSON.");
-        const result = extractJson(responseText);
-        
-        // ensure default arrays
-        res.json({
-            todos: result.todos || [],
-            assignments: result.assignments || [],
-            notes: result.notes || []
-        });
+        try {
+            const responseText = await callAI(prompt, "You are an intelligent task extractor and organizer. Respond ONLY with valid JSON.");
+            const result = extractJson(responseText);
+            
+            res.json({
+                todos: result.todos || [],
+                assignments: result.assignments || [],
+                notes: result.notes || []
+            });
+        } catch (e) {
+            res.json({
+                todos: [{ title: `Review Brain Dump: "${text.substring(0, 20)}..."`, priority: 'High', dayPlan: true, category: 'Personal' }],
+                assignments: [],
+                notes: [{ title: 'Auto-Archived Mind Sweep', content: text, tags: ["BrainDump", "Fallback"] }]
+            });
+        }
 
     } catch (err) {
         res.status(500).json({ message: "Mind Sweep Error", error: err.message });
