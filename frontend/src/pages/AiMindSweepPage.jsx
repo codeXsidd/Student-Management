@@ -99,26 +99,39 @@ const AiMindSweepPage = () => {
     return (
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.5rem' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                <div style={{ padding: 10, background: 'linear-gradient(135deg, #a855f7, #6366f1)', borderRadius: 12 }}>
-                    <Wand2 size={24} color="white" />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '3rem' }}>
+                <div style={{ 
+                    width: 64, height: 64, borderRadius: '50%', marginBottom: '1.25rem',
+                    background: 'linear-gradient(135deg, #c084fc, #ec4899)', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 8px 25px rgba(236, 72, 153, 0.3)'
+                }}>
+                    <Wand2 size={32} color="white" />
                 </div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 900, background: 'linear-gradient(to right, #c084fc, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <h1 style={{ 
+                    fontSize: '2.5rem', fontWeight: 900, marginBottom: '1rem',
+                    background: 'linear-gradient(to right, #c084fc, #f472b6)', 
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' 
+                }}>
                     AI Mind Sweep
                 </h1>
+                <p style={{ color: '#94a3b8', fontSize: '1.05rem', lineHeight: 1.6, maxWidth: 650, margin: '0 auto' }}>
+                    Clear your head. Dump your chaotic thoughts, tasks, and deadlines below. The AI will instantly untangle them into an organized action plan.
+                </p>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '2rem', lineHeight: 1.5, maxWidth: 600 }}>
-                Feeling overwhelmed? Brain dump everything on your mind—tasks, deadlines, big projects, or random ideas. The AI will instantly categorize and organize them for you.
-            </p>
 
             {/* Input Area */}
-            <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem', background: 'rgba(15,15,30,0.6)', border: '1px solid rgba(168,85,247,0.2)' }}>
+            <div style={{ 
+                padding: '1.5rem', marginBottom: '3rem', 
+                background: 'rgba(8,8,18,0.4)', borderRadius: '16px', 
+                border: '1px solid rgba(255,255,255,0.05)' 
+            }}>
                 <textarea
                     className="input"
                     style={{ 
                         width: '100%', minHeight: '180px', padding: '1.25rem', fontSize: '1.05rem', 
-                        background: 'rgba(0,0,0,0.3)', resize: 'vertical', lineHeight: 1.6, 
-                        border: '1px solid rgba(255,255,255,0.05)', color: '#e2e8f0', borderRadius: '12px'
+                        background: 'transparent', resize: 'vertical', lineHeight: 1.6, 
+                        border: 'none', color: '#e2e8f0', outline: 'none'
                     }}
                     placeholder={"Type loosely. E.g., 'I have a massive history essay due next Friday, plus I need to grab milk tonight. Remember to text mom. Oh, and here's a random idea: use a neural network for predictions!'" }
                     value={text}
@@ -129,7 +142,11 @@ const AiMindSweepPage = () => {
                         onClick={handleOrganize} 
                         disabled={loading || !text.trim()} 
                         className="btn-primary" 
-                        style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', display: 'flex', alignItems: 'center', gap: 8, padding: '0.75rem 2rem', fontSize: '1rem' }}
+                        style={{ 
+                            background: 'linear-gradient(135deg, #c084fc, #ec4899)', 
+                            display: 'flex', alignItems: 'center', gap: 8, 
+                            padding: '0.75rem 2rem', fontSize: '1rem', border: 'none' 
+                        }}
                     >
                         {loading ? <Loader size={18} className="spin" /> : <Wand2 size={18} />}
                         Organize My Mind
@@ -140,42 +157,46 @@ const AiMindSweepPage = () => {
             {/* Results */}
             {hasResults && (
                 <div className="fade-up">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#e2e8f0' }}>Your Organized Plan</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#e2e8f0' }}>Your Organized Plan</h2>
                         <button 
                             onClick={handleSaveAll} 
                             disabled={isSaving}
                             className="btn-primary"
-                            style={{ background: '#10b981', border: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
+                            style={{ background: '#10b981', border: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}
                         >
                             {isSaving ? <Loader size={18} className="spin" /> : <Save size={18} />}
                             Save All to Dashboard
                         </button>
                     </div>
 
-                    <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
                         
                         {/* Todos Column */}
-                        <div className="glass-card" style={{ padding: '1.25rem', borderTop: '4px solid #3b82f6' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1rem' }}>
-                                <CheckSquare size={20} color="#3b82f6" />
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0' }}>Action Items</h3>
+                        <div style={{ 
+                            padding: '1.5rem', borderRadius: '16px', 
+                            background: 'rgba(15,15,30,0.6)', border: '1px solid #3b82f6',
+                            boxShadow: '0 10px 30px rgba(59, 130, 246, 0.05)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1.5rem' }}>
+                                <CheckSquare size={22} color="#3b82f6" />
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Action Items</h3>
                             </div>
-                            {todos.length === 0 ? <p style={{ color: '#64748b', fontSize: '0.85rem' }}>No direct tasks found.</p> : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {todos.length === 0 ? <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No direct tasks found.</p> : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     {todos.map((t, idx) => (
-                                        <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <input className="input" style={{ width: '85%', padding: '0.4rem', fontSize: '0.9rem', background: 'transparent', border: 'none', color: '#e2e8f0' }} value={t.title} onChange={e => {
+                                        <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 10 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                                                <input className="input" style={{ flex: 1, padding: 0, fontSize: '0.95rem', background: 'transparent', border: 'none', color: '#e2e8f0', fontWeight: 600 }} value={t.title} onChange={e => {
                                                     const newArr = [...todos]; newArr[idx].title = e.target.value; setTodos(newArr);
                                                 }} />
-                                                <button onClick={() => setTodos(todos.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: '#ef4444' }}>
-                                                    <Trash2 size={14} />
+                                                <button onClick={() => setTodos(todos.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#ef4444', flexShrink: 0, marginTop: 2 }}>
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
-                                            <div style={{ display: 'flex', gap: 6, marginTop: 4, paddingLeft: '0.4rem' }}>
-                                                {t.dayPlan && <span style={{ fontSize: '0.65rem', background: '#ec489920', color: '#f472b6', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>DO TODAY</span>}
-                                                <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', color: '#94a3b8', padding: '2px 6px', borderRadius: 4 }}>{t.priority}</span>
+                                            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                                {t.dayPlan && <span style={{ fontSize: '0.65rem', background: 'rgba(2ec4899,0.1)', color: '#f472b6', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>DO TODAY</span>}
+                                                <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', color: '#94a3b8', padding: '3px 8px', borderRadius: 6, fontWeight: 600 }}>{t.priority}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -184,25 +205,29 @@ const AiMindSweepPage = () => {
                         </div>
 
                         {/* Assignments Column */}
-                        <div className="glass-card" style={{ padding: '1.25rem', borderTop: '4px solid #f59e0b' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1rem' }}>
-                                <AlertCircle size={20} color="#f59e0b" />
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0' }}>Big Projects</h3>
+                        <div style={{ 
+                            padding: '1.5rem', borderRadius: '16px', 
+                            background: 'rgba(15,15,30,0.6)', border: '1px solid #f59e0b',
+                            boxShadow: '0 10px 30px rgba(245, 158, 11, 0.05)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1.5rem' }}>
+                                <AlertCircle size={22} color="#f59e0b" />
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Big Projects</h3>
                             </div>
-                            {assignments.length === 0 ? <p style={{ color: '#64748b', fontSize: '0.85rem' }}>No major assignments found.</p> : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {assignments.length === 0 ? <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No major assignments found.</p> : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     {assignments.map((a, idx) => (
-                                        <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <input className="input" style={{ width: '85%', padding: '0.4rem', fontSize: '0.9rem', background: 'transparent', border: 'none', color: '#e2e8f0', fontWeight: 700 }} value={a.title} onChange={e => {
+                                        <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 10 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                                                <input className="input" style={{ flex: 1, padding: 0, fontSize: '0.95rem', background: 'transparent', border: 'none', color: '#e2e8f0', fontWeight: 600 }} value={a.title} onChange={e => {
                                                     const newArr = [...assignments]; newArr[idx].title = e.target.value; setAssignments(newArr);
                                                 }} />
-                                                <button onClick={() => setAssignments(assignments.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: '#ef4444' }}>
-                                                    <Trash2 size={14} />
+                                                <button onClick={() => setAssignments(assignments.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#ef4444', flexShrink: 0, marginTop: 2 }}>
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
                                             {a.deadline && (
-                                                <p style={{ fontSize: '0.7rem', color: '#fca5a5', marginTop: 4, paddingLeft: '0.4rem' }}>
+                                                <p style={{ fontSize: '0.75rem', color: '#fca5a5', marginTop: 10, margin: '10px 0 0 0' }}>
                                                     Due: {new Date(a.deadline).toLocaleDateString()}
                                                 </p>
                                             )}
@@ -213,24 +238,28 @@ const AiMindSweepPage = () => {
                         </div>
 
                         {/* Notes Column */}
-                        <div className="glass-card" style={{ padding: '1.25rem', borderTop: '4px solid #10b981' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1rem' }}>
-                                <FileText size={20} color="#10b981" />
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0' }}>Notes & Ideas</h3>
+                        <div style={{ 
+                            padding: '1.5rem', borderRadius: '16px', 
+                            background: 'rgba(15,15,30,0.6)', border: '1px solid #10b981',
+                            boxShadow: '0 10px 30px rgba(16, 185, 129, 0.05)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1.5rem' }}>
+                                <FileText size={22} color="#10b981" />
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Notes & Ideas</h3>
                             </div>
-                            {notes.length === 0 ? <p style={{ color: '#64748b', fontSize: '0.85rem' }}>No scattered notes found.</p> : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {notes.length === 0 ? <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No scattered notes found.</p> : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     {notes.map((n, idx) => (
-                                        <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <input className="input" style={{ width: '85%', padding: '0.4rem', fontSize: '0.9rem', background: 'transparent', border: 'none', color: '#e2e8f0', fontWeight: 700 }} value={n.title} onChange={e => {
+                                        <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 10 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                                                <input className="input" style={{ flex: 1, padding: 0, fontSize: '0.95rem', background: 'transparent', border: 'none', color: '#e2e8f0', fontWeight: 600 }} value={n.title} onChange={e => {
                                                     const newArr = [...notes]; newArr[idx].title = e.target.value; setNotes(newArr);
                                                 }} />
-                                                <button onClick={() => setNotes(notes.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: '#ef4444' }}>
-                                                    <Trash2 size={14} />
+                                                <button onClick={() => setNotes(notes.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#ef4444', flexShrink: 0, marginTop: 2 }}>
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
-                                            <p style={{ fontSize: '0.75rem', color: '#cbd5e1', paddingLeft: '0.4rem', marginTop: 4, fontStyle: 'italic' }}>
+                                            <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginTop: 10, margin: '10px 0 0 0', fontStyle: 'italic', lineHeight: 1.5 }}>
                                                 {n.content}
                                             </p>
                                         </div>
