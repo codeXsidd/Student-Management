@@ -231,11 +231,6 @@ const DashboardPage = () => {
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
                         {greeting()}, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span>
-                        {user?.level !== undefined && (
-                            <span style={{ marginLeft: '12px', fontSize: '1rem', fontWeight: 800, padding: '4px 8px', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: '8px', verticalAlign: 'middle' }}>
-                                Lvl {user.level}
-                            </span>
-                        )}
                     </h1>
                     <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
                         {now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
