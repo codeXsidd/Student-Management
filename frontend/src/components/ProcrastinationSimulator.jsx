@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { simulateProcrastination } from '../services/api';
 import toast from 'react-hot-toast';
-import { EyeOff, AlertTriangle, FastForward, Loader, ArrowRight, Skull } from 'lucide-react';
+import { EyeOff, AlertTriangle, FastForward, Loader, ArrowRight, Skull, Zap, Play } from 'lucide-react';
 
 const ProcrastinationSimulator = ({ defaultTask = "" }) => {
     const [task, setTask] = useState(defaultTask);
@@ -109,11 +109,31 @@ const ProcrastinationSimulator = ({ defaultTask = "" }) => {
                         </div>
                     </div>
 
-                    <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-                        <button onClick={() => { setTimeline(null); setTask(''); }} className="btn-primary" style={{ background: '#10b981', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0.75rem 2rem' }}>
-                            <ArrowRight size={16} /> I'll Go Do It Now
-                        </button>
-                    </div>
+                    {/* REDEMPTION PATH / ANTIDOTE */}
+                    {timeline.antidote && (
+                        <div className="fade-up" style={{ marginTop: '2.5rem', padding: '1.5rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.2))', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '16px', boxShadow: '0 10px 30px rgba(16,185,129,0.15)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '0.75rem' }}>
+                                <div style={{ background: '#10b981', padding: '8px', borderRadius: '50%' }} className="float">
+                                    <Zap size={18} color="white" />
+                                </div>
+                                <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                                    Break The Cycle Now
+                                </h4>
+                            </div>
+                            <p style={{ fontSize: '0.95rem', color: '#e2e8f0', lineHeight: 1.6, marginBottom: '1.25rem', fontWeight: 500 }}>
+                                <strong style={{ color: '#34d399' }}>The Antidote:</strong> {timeline.antidote}
+                            </p>
+                            <div style={{ textAlign: 'right' }}>
+                                <button onClick={() => { 
+                                    toast.success("Momentum initiated! Go crush it.", { icon: '🔥' }); 
+                                    setTimeline(null); 
+                                    setTask(''); 
+                                }} className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0.75rem 2rem', fontWeight: 800, color: 'white' }}>
+                                    <Play size={16} fill="white" /> Start My 2 Minutes
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

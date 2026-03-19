@@ -507,9 +507,10 @@ router.post('/simulate-procrastination', auth, async (req, res) => {
         
         Return EXACTLY this JSON format:
         {
-            "oneWeek": "The consequence after 1 week (e.g., failing a quiz, stressing over a deadline).",
-            "oneMonth": "The consequence after 1 month (e.g., bombing a midterm, dropping an elective to catch up).",
-            "oneYear": "The consequence after 1 year (e.g., losing a dream internship, entirely changing majors)."
+            "oneWeek": "The consequence after 1 week (e.g., failing a quiz).",
+            "oneMonth": "The consequence after 1 month (e.g., bombing a midterm).",
+            "oneYear": "The consequence after 1 year (e.g., losing a dream internship).",
+            "antidote": "A ridiculously easy, 2-minute micro-step to start right now and break inertia. (e.g. 'Just open the textbook to page 1 and read the first sentence.')"
         }`;
 
         try {
@@ -519,7 +520,8 @@ router.post('/simulate-procrastination', auth, async (req, res) => {
             res.json({ 
                 oneWeek: `You keep pushing "${taskTitle}" off, and the pile of work doubles. You end up sacrificing your entire weekend.`,
                 oneMonth: `The stress from avoiding "${taskTitle}" bleeds into your other classes. Your grades slip universally.`,
-                oneYear: `You look back and realize procrastinating on "${taskTitle}" was the domino that ruined your semester's momentum.`
+                oneYear: `You look back and realize procrastinating on "${taskTitle}" was the domino that ruined your semester's momentum.`,
+                antidote: `Set a strict timer for exactly 2 minutes and do the smallest, easiest macroscopic step of "${taskTitle}". Starting is 90% of the battle.`
             });
         }
 
