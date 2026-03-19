@@ -69,4 +69,5 @@ export const matchTask = (data) => API.post('/ai/match-task', data);
 export const lockVault = (data) => API.post('/ai/vault/lock', data);
 export const breakVault = (data) => API.post('/ai/vault/break', data);
 export const simulateProcrastination = (data) => API.post('/ai/simulate-procrastination', data);
-export const aiMindSweep = (data) => API.post('/ai/mind-sweep', data);
+export const syncRival = (data) => API.post('/ai/rival-sync', data);
+export const parseMindSweep = (data) => API.post('/ai/mind-sweep', data);
