@@ -8,7 +8,7 @@
 ![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?style=for-the-badge&logo=vercel)
 ![Render](https://img.shields.io/badge/Backend-Render-purple?style=for-the-badge)
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge&logo=google-chrome)](YOUR_DEPLOY_LINK)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge&logo=google-chrome)](https://studytrack-hub.vercel.app/)
 
 ---
 
