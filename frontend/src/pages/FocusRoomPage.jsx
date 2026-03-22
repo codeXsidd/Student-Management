@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Timer, Play, Pause, Coffee, BookOpen, Clock, Zap, Target, Bot, Send } from 'lucide-react';
 import API, { addXP, aiChat } from '../services/api';
 import toast from 'react-hot-toast';
@@ -141,6 +142,10 @@ const FocusRoomPage = () => {
 
     return (
         <div style={{ height: 'calc(100vh - 40px)', margin: '-1.5rem', background: '#050510', position: 'relative', overflow: 'hidden' }}>
+            <Helmet>
+                <title>Deep Focus Room — StudyTrack</title>
+                <meta name="description" content="Eliminate distractions and achieve flow state with Pomodoro timers and our AI Study Tutor." />
+            </Helmet>
             {/* Ambient Background - Lofi video iframe (No controls, looping) */}
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.2, pointerEvents: 'none', zIndex: 0 }}>
                 {/* Embedded Lofi Girl Radio or Similar */}

@@ -87,11 +87,17 @@ const LoginPage = () => {
                     ))}
                 </div>
 
-                <div style={{ marginTop: '2.5rem', padding: '1rem 1.25rem', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', borderRadius: 12 }}>
-                    <p style={{ fontSize: '0.78rem', color: '#64748b', fontStyle: 'italic', lineHeight: 1.6 }}>
-                        "The most feature-rich personal student tracker I've used. GPA tracking + timetable + journal in one place!"
+                <div style={{ marginTop: '2.5rem', padding: '1rem 1.25rem', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', borderRadius: 12, position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: -10, left: 16, background: '#0a0a14', padding: '0 8px', color: '#8b5cf6', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Creator's Note
+                    </div>
+                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.6, marginTop: 4 }}>
+                        "I built StudyTrack because I needed a smarter way to manage my GPA, timetable, and study habits in one place. Built for students, by a student."
                     </p>
-                    <p style={{ fontSize: '0.7rem', color: '#475569', marginTop: 8, fontWeight: 600 }}>— Final year engineering student</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: 10 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.6rem', fontWeight: 800 }}>S</div>
+                        <p style={{ fontSize: '0.75rem', color: '#e2e8f0', fontWeight: 700 }}>Siddharth</p>
+                    </div>
                 </div>
             </div>
 

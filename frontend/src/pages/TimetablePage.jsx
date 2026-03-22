@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Calendar, Plus, Trash2, X, Settings, Clock, Save, RotateCcw, Bot, Sparkles } from 'lucide-react';
 import API, { optimizeSchedule } from '../services/api';
 import toast from 'react-hot-toast';
@@ -122,6 +123,10 @@ const TimetablePage = () => {
 
     return (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem' }}>
+            <Helmet>
+                <title>Weekly Timetable — StudyTrack</title>
+                <meta name="description" content="Organize your weekly schedule, set study periods, and let AI optimize your timetable." />
+            </Helmet>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.5rem', fontWeight: 700 }}>
                     <Calendar size={26} color="#6366f1" /> Weekly Timetable
