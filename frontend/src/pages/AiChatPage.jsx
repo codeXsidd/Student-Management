@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Send, Bot, User, Sparkles, Trash2, Brain, Zap, Clock, MessageSquare, Target, Coffee, Layout, Calendar, Flame } from 'lucide-react';
 import API, { aiChat } from '../services/api';
 import toast from 'react-hot-toast';
@@ -139,6 +140,10 @@ const AiChatPage = () => {
 
     return (
         <div className="page-container animate-fade-in chat-layout" style={{ display: 'flex', gap: '1.5rem', height: '100%', maxWidth: '1400px', margin: '0 auto', overflow: 'hidden', padding: '1rem', position: 'relative' }}>
+            <Helmet>
+                <title>AI Study Buddy — StudyTrack</title>
+                <meta name="description" content="Chat with your AI Study Buddy to break down tasks, learn new concepts, and build the perfect study plan." />
+            </Helmet>
 
             {/* Backdrop for mobile sidebar */}
             {showSidebar && (
