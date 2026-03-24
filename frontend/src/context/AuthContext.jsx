@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const updateUserXP = (xp, level) => {
-        setUser(prev => ({ ...prev, xp, level }));
+        setUser(prev => prev ? { ...prev, xp, level } : prev);
     };
 
     const logout = () => {

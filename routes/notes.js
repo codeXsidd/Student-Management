@@ -34,7 +34,7 @@ router.put('/:id', async (req, res) => {
         const note = await Note.findOneAndUpdate(
             { _id: req.params.id, user: req.userId },
             req.body,
-            { returnDocument: 'after' }
+            { new: true }
         );
         if (!note) return res.status(404).json({ message: 'Note not found.' });
         res.json(note);

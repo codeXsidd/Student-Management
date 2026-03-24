@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
         const entry = await JournalEntry.findOneAndUpdate(
             { user: req.userId, date },
             { subjects: subjects || [], hoursStudied: hoursStudied || 0, mood: mood || '😐', notes: notes || '', topics: topics || '' },
-            { returnDocument: 'after', upsert: true }
+            { new: true, upsert: true }
         );
         res.status(201).json(entry);
     } catch (err) {
