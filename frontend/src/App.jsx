@@ -43,30 +43,27 @@ const Layout = ({ children }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
-            {/* Premium Global Banner */}
+            {/* Global Announcement Banner */}
             <div style={{ 
-                background: 'linear-gradient(90deg, #4f46e5, #7c3aed, #db2777)', 
-                padding: '0.4rem 1rem', 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                gap: '2rem', 
-                color: 'white', 
+                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)', 
+                color: '#fff', 
+                padding: '0.5rem 1rem', 
+                textAlign: 'center', 
                 fontSize: '0.85rem', 
                 fontWeight: 700, 
+                letterSpacing: '0.02em',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
                 zIndex: 1000,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '1rem'
             }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.02em' }}>
-                    🚀 <span style={{ opacity: 0.9 }}>Growth Potential:</span> 
-                    <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.15rem 0.5rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>All Devs</span>
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.02em' }}>
-                    🎯 <span style={{ opacity: 0.9 }}>Target Users:</span> 
-                    <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.15rem 0.5rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>50k+</span>
-                </span>
+                <span>🚀 Growth Potential: <strong style={{color:'#fdf2f8'}}>All Devs</strong></span>
+                <span style={{ opacity: 0.5 }}>|</span>
+                <span>🎯 Target Users: <strong style={{color:'#fdf2f8'}}>50k+</strong></span>
             </div>
-
+            
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 <Sidebar />
                 <main className="main-content" style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
