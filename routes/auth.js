@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const axios = require('axios');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 
@@ -26,14 +27,8 @@ router.post('/send-otp', async (req, res) => {
         await OTP.create({ email, otp });
 
         if (process.env.BREVO_API_KEY) {
-            await fetch("https://api.brevo.com/v3/smtp/email", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                    "api-key": process.env.BREVO_API_KEY
-                },
-                body: JSON.stringify({
+            try {
+                await axios.post("https://api.brevo.com/v3/smtp/email", {
                     sender: { name: "StudyTrack Support", email: "siddharthdeveloper2006@gmail.com" },
                     to: [{ email }],
                     subject: "Your StudyTrack Verification Code",
@@ -42,8 +37,17 @@ router.post('/send-otp', async (req, res) => {
                         <p>Your verification code is: <strong>${otp}</strong></p>
                         <p>This code is valid for 5 minutes.</p>
                     `
-                })
-            });
+                }, {
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "api-key": process.env.BREVO_API_KEY
+                    }
+                });
+            } catch (err) {
+                console.error("Brevo API error in send-otp:", err.response ? err.response.data : err.message);
+                throw new Error("Failed to send OTP email via Brevo.");
+            }
         } else {
             console.warn("BREVO_API_KEY missing, generated OTP:", otp);
         }
@@ -51,6 +55,22 @@ router.post('/send-otp', async (req, res) => {
         res.json({ message: 'OTP sent to email.' });
     } catch (err) {
         console.error('SEND OTP ERROR:', err.message);
+        res.status(500).json({ message: 'Server error.', error: err.message });
+    }
+});
+
+// @POST /api/auth/verify-otp
+router.post('/verify-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required.' });
+
+        const validOtp = await OTP.findOne({ email, otp });
+        if (!validOtp) return res.status(400).json({ message: 'Invalid or expired OTP.' });
+
+        res.json({ message: 'OTP verified successfully.' });
+    } catch (err) {
+        console.error('VERIFY OTP ERROR:', err.message);
         res.status(500).json({ message: 'Server error.', error: err.message });
     }
 });
@@ -173,21 +193,15 @@ router.post('/forgot-password', async (req, res) => {
                 });
             }
 
-            // Brevo (Sendinblue) API Call - Sends to the actual user via HTTPS (Bypasses Render SMTP block)
-            const brevoResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                    "api-key": process.env.BREVO_API_KEY
-                },
-                body: JSON.stringify({
+            // Brevo (Sendinblue) API Call - Sends to the actual user via HTTPS
+            try {
+                await axios.post("https://api.brevo.com/v3/smtp/email", {
                     sender: {
                         name: "StudyTrack Support",
-                        email: "siddharthdeveloper2006@gmail.com" // Your verified sender email
+                        email: "siddharthdeveloper2006@gmail.com"
                     },
                     to: [
-                        { email: user.email } // The student who requested the reset
+                        { email: user.email }
                     ],
                     subject: "Password Reset Request - StudyTrack",
                     htmlContent: `
@@ -197,13 +211,16 @@ router.post('/forgot-password', async (req, res) => {
                         <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:white;text-decoration:none;border-radius:5px;margin-top:10px;">Reset Password</a>
                         <p style="margin-top:20px;font-size:12px;color:#666;">If you didn't request this, please ignore this email.</p>
                     `
-                })
-            });
-
-            const brevoData = await brevoResponse.json();
-
-            if (!brevoResponse.ok) {
-                throw new Error(brevoData.message || "Brevo API failed to send the email.");
+                }, {
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "api-key": process.env.BREVO_API_KEY
+                    }
+                });
+            } catch (err) {
+                console.error("Brevo API exact error:", err.response ? err.response.data : err.message);
+                throw new Error("Brevo API failed to send the email.");
             }
 
             res.json({
