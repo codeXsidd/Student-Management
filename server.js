@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const dns = require('dns');
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Enable reliable DNS globally to fix connectivity issues with AI/DB APIs on certain networks
@@ -12,7 +15,18 @@ dns.setDefaultResultOrder('ipv4first');
 const app = express();
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'https://smartstudy-hub.vercel.app', 'https://studytrack-hub.vercel.app'];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(helmet());
 app.use(express.json());
+app.use(mongoSanitize());
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window`
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests from this IP, please try again after 15 minutes." }
+});
+app.use('/api/', apiLimiter);
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./routes/auth'));

@@ -30,8 +30,8 @@ const RegisterPage = () => {
         const p = form.password;
         if (!p) return 0;
         let score = 0;
-        if (p.length >= 6) score++;
-        if (p.length >= 10) score++;
+        if (p.length >= 8) score++;
+        if (p.length >= 12) score++;
         if (/[A-Z]/.test(p)) score++;
         if (/[0-9]/.test(p)) score++;
         if (/[^A-Za-z0-9]/.test(p)) score++;
@@ -72,7 +72,11 @@ const RegisterPage = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+        const pwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!pwdRegex.test(form.password)) { 
+            toast.error('Password must be at least 8 characters, include an uppercase letter, a number, and a special character'); 
+            return; 
+        }
         setLoading(true);
         try {
             const res = await registerApi({ ...form, otp });
@@ -224,7 +228,7 @@ const RegisterPage = () => {
                             <label style={{ display: 'block', fontSize: '0.73rem', fontWeight: 700, marginBottom: 6, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create Password</label>
                             <div style={{ position: 'relative' }}>
                                 <Lock size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
-                                <input type={showPwd ? 'text' : 'password'} placeholder="min. 6 characters" className="input" style={{ paddingLeft: '2.25rem', paddingRight: '2.5rem' }}
+                                <input type={showPwd ? 'text' : 'password'} placeholder="min. 8 characters + mixed casing" className="input" style={{ paddingLeft: '2.25rem', paddingRight: '2.5rem' }}
                                     value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required autoFocus={step === 3} />
                                 <button type="button" onClick={() => setShowPwd(!showPwd)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#475569', fontSize: '0.65rem', fontWeight: 700, padding: 0 }}>
                                     {showPwd ? 'HIDE' : 'SHOW'}

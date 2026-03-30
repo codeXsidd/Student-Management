@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const axios = require('axios');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 
@@ -11,6 +12,21 @@ const router = express.Router();
 const generateToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
+
+// --- Security Middleware ---
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10, // Max 10 requests per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many authentication requests, please try again in 15 minutes." }
+});
+
+const passwordComplexity = (password) => {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return regex.test(password);
+};
+// ----------------------------
 
 // @POST /api/auth/send-otp
 router.post('/send-otp', async (req, res) => {
@@ -76,7 +92,7 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 // @POST /api/auth/register
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
     try {
         const { name, email, password, otp } = req.body;
 
@@ -84,8 +100,10 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'All fields and OTP are required.' });
         }
 
-        if (password.length < 6) {
-            return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+        if (!passwordComplexity(password)) {
+            return res.status(400).json({ 
+                message: 'Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.' 
+            });
         }
 
         const validOtp = await OTP.findOne({ email, otp });
@@ -116,7 +134,7 @@ router.post('/register', async (req, res) => {
 });
 
 // @POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -158,7 +176,7 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
 });
 
 // @POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
     try {
         const { email } = req.body;
 
@@ -245,13 +263,15 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // @POST /api/auth/reset-password/:token
-router.post('/reset-password/:token', async (req, res) => {
+router.post('/reset-password/:token', authLimiter, async (req, res) => {
     try {
         const { password } = req.body;
         const { token } = req.params;
 
-        if (!password || password.length < 6) {
-            return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+        if (!passwordComplexity(password)) {
+            return res.status(400).json({ 
+                message: 'Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.' 
+            });
         }
 
         // Hash the incoming token to compare with stored hash

@@ -17,8 +17,9 @@ const ResetPasswordPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (password.length < 6) {
-            return toast.error('Password must be at least 6 characters');
+        const pwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!pwdRegex.test(password)) {
+            return toast.error('Password must be at least 8 characters, include an uppercase letter, a number, and a special character');
         }
         if (password !== confirm) {
             return toast.error('Passwords do not match');
@@ -69,7 +70,7 @@ const ResetPasswordPage = () => {
                                 <Lock size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
-                                    placeholder="min. 6 characters"
+                                    placeholder="min. 8 characters + mixed casing"
                                     className="input"
                                     style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                                     value={password}
@@ -89,12 +90,12 @@ const ResetPasswordPage = () => {
                                     <div style={{ height: 4, background: 'rgba(99,102,241,0.1)', borderRadius: 2, overflow: 'hidden' }}>
                                         <div style={{
                                             height: '100%', borderRadius: 2, transition: 'width 0.3s',
-                                            width: password.length >= 10 ? '100%' : password.length >= 8 ? '66%' : password.length >= 6 ? '33%' : '10%',
-                                            background: password.length >= 10 ? '#10b981' : password.length >= 8 ? '#f59e0b' : '#ef4444'
+                                            width: password.length >= 12 ? '100%' : password.length >= 10 ? '75%' : password.length >= 8 ? '50%' : '10%',
+                                            background: password.length >= 12 ? '#06b6d4' : password.length >= 10 ? '#10b981' : password.length >= 8 ? '#f59e0b' : '#ef4444'
                                         }} />
                                     </div>
                                     <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 3 }}>
-                                        {password.length >= 10 ? '💪 Strong' : password.length >= 8 ? '😐 Medium' : password.length >= 6 ? '😟 Weak' : '❌ Too short'}
+                                        {password.length >= 12 ? '🤩 Very Strong' : password.length >= 10 ? '💪 Strong' : password.length >= 8 ? '😐 Medium' : '❌ Too short/Weak'}
                                     </p>
                                 </div>
                             )}
