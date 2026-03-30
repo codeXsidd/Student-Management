@@ -104,7 +104,10 @@ Return EXACTLY this JSON format (ALL keys must exist):
   "spaceComplexity": "O(1) - explain in very simple terms...",
   "beginnerTips": "Common mistakes beginners make and what to focus on...",
   "mistakes": "Check for logical errors, edge case issues, inefficient parts...",
+  "securityAudit": "Is there any vulnerability? List risks like SQLi, XSS, Overflow, etc. If none, say 'No major vulnerabilities detected.'",
+  "testCases": [{"input": "5", "output": "120", "explanation": "Factorial of 5 is 120"}],
   "optimalSolution": "Format: Current Approach: ... Better Approach: ... Why Better: ...",
+  "refactorReasoning": "Explain step-by-step why the optimized version is better...",
   "optimizedCode": "// Provide improved version of the code with beginner comments",
   "interviewInsight": "What interviewer expects and common follow-up questions"
 }`;
@@ -129,7 +132,10 @@ Return EXACTLY this JSON format (ALL keys must exist):
                 spaceComplexity: "O(1)",
                 beginnerTips: "Remember to check for edge cases.",
                 mistakes: "No major logical errors detected in fallback.",
+                securityAudit: "No major vulnerabilities detected in fallback analysis.",
+                testCases: [{ input: "Sample Input", output: "Sample Output", explanation: "Basic execution path." }],
                 optimalSolution: "Current: Basic. Better: Optimized approach.",
+                refactorReasoning: "The optimized version reduces time complexity and improves readability.",
                 optimizedCode: "// Optimised code here",
                 interviewInsight: "Focus on edge cases."
             });
