@@ -33,7 +33,8 @@ const LoginPage = () => {
             toast.success(`Welcome back, ${res.data.user.name}! 👋`);
             navigate('/');
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Login failed');
+            console.error('LOGIN_ERROR:', err.response?.data || err.message);
+            toast.error(err.response?.data?.message || err.message || 'Login failed');
         } finally {
             setLoading(false);
         }
