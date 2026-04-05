@@ -7,6 +7,11 @@ const API = axios.create({
 
 // Attach token and log errors
 API.interceptors.request.use((config) => {
+    // Ensure all relative paths go through /api if not already present
+    // This fixes issues where /auth/login resolves to domain root instead of /api
+    if (!config.url.startsWith('/api') && !config.url.startsWith('http')) {
+        config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+    }
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;

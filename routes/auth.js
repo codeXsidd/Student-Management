@@ -34,13 +34,13 @@ router.post('/send-otp', async (req, res) => {
         const { email } = req.body;
         if (!email) return res.status(400).json({ message: 'Email is required.' });
 
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) return res.status(400).json({ message: 'Email already registered.' });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        await OTP.deleteMany({ email });
-        await OTP.create({ email, otp });
+        await OTP.deleteMany({ email: email.toLowerCase() });
+        await OTP.create({ email: email.toLowerCase(), otp });
 
         if (process.env.BREVO_API_KEY) {
             try {
@@ -106,12 +106,12 @@ router.post('/register', authLimiter, async (req, res) => {
             });
         }
 
-        const validOtp = await OTP.findOne({ email, otp });
+        const validOtp = await OTP.findOne({ email: email.toLowerCase(), otp });
         if (!validOtp) {
             return res.status(400).json({ message: 'Invalid or expired OTP.' });
         }
 
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             return res.status(400).json({ message: 'Email already registered.' });
         }
@@ -142,7 +142,7 @@ router.post('/login', authLimiter, async (req, res) => {
             return res.status(400).json({ message: 'Email and password are required.' });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             console.warn(`[LOGIN FAILED] Account does not exist: ${email}`);
             return res.status(400).json({ message: 'Invalid email or password.' });
@@ -186,7 +186,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
             return res.status(400).json({ message: 'Email is required.' });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             // Don't reveal whether email exists — always return success
             return res.json({ message: 'If that email is registered, a reset link has been generated.' });

@@ -28,6 +28,13 @@ app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(helmet());
 app.use(express.json());
 app.use(mongoSanitize());
+
+// Logger to help diagnose connectivity and routing issues in deployment
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - IP: ${req.ip}`);
+  next();
+});
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 500, // increased from 100 to 500
@@ -63,7 +70,12 @@ mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 5000 // Timeout early rather than hanging
 })
   .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch(err => console.error('❌ MongoDB error:', err.message));
+  .catch(err => {
+      console.error('LOGIN_ERROR_DETAILS:', {
+          message: err.message
+      });
+      console.error('❌ MongoDB error:', err.message);
+  });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
