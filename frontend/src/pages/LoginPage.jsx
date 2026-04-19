@@ -529,6 +529,23 @@ const LoginPage = () => {
                         </form>
                     </div>
                 </div>
+                
+                {/* FOOTER */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '2.5rem',
+                    textAlign: 'center',
+                    zIndex: 2,
+                    opacity: isLampOn ? 0.9 : 0.2,
+                    transition: 'opacity 0.8s ease'
+                }}>
+                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 6px 0', letterSpacing: '0.05em' }}>
+                        Designed by <span style={{ color: '#fff', fontWeight: 700 }}>Siddharth</span>
+                    </p>
+                    <a href="https://www.linkedin.com/in/siddharth2006" target="_blank" rel="noopener noreferrer" className="footer-linkedin-link">
+                        www.linkedin.com/siddharth2006
+                    </a>
+                </div>
             </div>
 
             <style>{`
@@ -764,9 +781,31 @@ const LoginPage = () => {
                 #lamp-login-system .base__top { fill: var(--base-top); }
                 #lamp-login-system .base__side { fill: var(--base-side); }
                 #lamp-login-system .top__body { fill: var(--t-3); }
+
+                /* Footer link hover */
+                .footer-linkedin-link {
+                    font-size: 0.75rem;
+                    color: #8b5cf6;
+                    text-decoration: none;
+                    font-weight: 600;
+                    display: inline-block;
+                    background-color: rgba(139, 92, 246, 0.1);
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    border: 1px solid rgba(139, 92, 246, 0.3);
+                    transition: all 0.3s ease;
+                }
+                .footer-linkedin-link:hover {
+                    background-color: rgba(139, 92, 246, 0.2);
+                    border-color: rgba(139, 92, 246, 0.6);
+                    color: #a78bfa;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+                }
             `}</style>
         </>
     );
 };
 
 export default LoginPage;
+
