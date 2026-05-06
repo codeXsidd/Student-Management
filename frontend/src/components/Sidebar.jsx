@@ -31,6 +31,7 @@ const productivityLinks = [
     { to: '/codeinsight', icon: <Cpu size={18} />, label: 'CodeInsight AI' },
     { to: '/arsenal', icon: <Brain size={18} />, label: 'AI Arsenal' },
     { to: '/mind-sweep', icon: <Wand2 size={18} />, label: 'AI Mind Sweep' },
+    { to: '/devhub', icon: <Cpu size={18} />, label: 'Agentic DevHub' },
     { to: '/study-card', icon: <Share2 size={18} />, label: 'Share Card' },
     { to: '/pomodoro', icon: <Timer size={18} />, label: 'Pomodoro' },
     { to: '/focus-room', icon: <Zap size={18} />, label: 'Deep Focus Room' },
