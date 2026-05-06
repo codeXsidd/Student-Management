@@ -29,6 +29,7 @@ import AiMindSweepPage from './pages/AiMindSweepPage';
 import AiArsenalPage from './pages/AiArsenalPage';
 import CodeInsightPage from './pages/CodeInsightPage';
 import StudyCardPage from './pages/StudyCardPage';
+import AgentDevHubPage from './pages/AgentDevHubPage';
 
 const Layout = ({ children }) => {
     const { pathname } = useLocation();
@@ -83,6 +84,7 @@ const AppRoutes = () => {
             <Route path="/arsenal" element={<P><AiArsenalPage /></P>} />
             <Route path="/codeinsight" element={<P><CodeInsightPage /></P>} />
             <Route path="/study-card" element={<P><StudyCardPage /></P>} />
+            <Route path="/devhub" element={<P><AgentDevHubPage /></P>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

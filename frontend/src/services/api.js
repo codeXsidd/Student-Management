@@ -91,3 +91,8 @@ export const syncRival = (data) => API.post('/ai/rival-sync', data);
 export const parseMindSweep = (data) => API.post('/ai/mind-sweep', data);
 export const analyzeCode = (data) => API.post('/codeinsight/analyze', data);
 export const generateStudyCard = (data) => API.post('/ai/study-card', data);
+
+// Agents
+export const welcomeAgent = (data) => API.post('/agents/welcome', data);
+export const issueResolver = (data) => API.post('/agents/issue-resolver', data);
+export const prReviewer = (data) => API.post('/agents/pr-reviewer', data);

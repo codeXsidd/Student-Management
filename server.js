@@ -67,6 +67,7 @@ app.use('/api/todos', require('./routes/todos'));
 app.use('/api/habits', require('./routes/habits'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/codeinsight', require('./routes/codeinsight'));
+app.use('/api/agents', require('./routes/agents'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
