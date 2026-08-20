@@ -206,7 +206,7 @@ const GpaCalculatorPage = () => {
     return (
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
             <Helmet>
-                <title>GPA & CGPA Predictor — StudyTrack</title>
+                <title>GPA & CGPA Predictor — Studivexa</title>
                 <meta name="description" content="Use the AI Predictor to calculate the exact SGPA you need to reach your target CGPA." />
             </Helmet>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>

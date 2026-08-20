@@ -45,11 +45,11 @@ router.post('/send-otp', async (req, res) => {
         if (process.env.BREVO_API_KEY) {
             try {
                 await axios.post("https://api.brevo.com/v3/smtp/email", {
-                    sender: { name: "StudyTrack Support", email: "siddharthdeveloper2006@gmail.com" },
+                    sender: { name: "Studivexa Support", email: "siddharthdeveloper2006@gmail.com" },
                     to: [{ email }],
-                    subject: "Your StudyTrack Verification Code",
+                    subject: "Your Studivexa Verification Code",
                     htmlContent: `
-                        <h2>StudyTrack Registration</h2>
+                        <h2>Studivexa Registration</h2>
                         <p>Your verification code is: <strong>${otp}</strong></p>
                         <p>This code is valid for 5 minutes.</p>
                     `
@@ -217,16 +217,16 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
             try {
                 await axios.post("https://api.brevo.com/v3/smtp/email", {
                     sender: {
-                        name: "StudyTrack Support",
+                        name: "Studivexa Support",
                         email: "siddharthdeveloper2006@gmail.com"
                     },
                     to: [
                         { email: user.email }
                     ],
-                    subject: "Password Reset Request - StudyTrack",
+                    subject: "Password Reset Request - Studivexa",
                     htmlContent: `
                         <h2>Password Reset Request</h2>
-                        <p>You requested a password reset for your StudyTrack account.</p>
+                        <p>You requested a password reset for your Studivexa account.</p>
                         <p>Please click the link below to set a new password. This link is valid for 1 hour.</p>
                         <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#6366f1;color:white;text-decoration:none;border-radius:5px;margin-top:10px;">Reset Password</a>
                         <p style="margin-top:20px;font-size:12px;color:#666;">If you didn't request this, please ignore this email.</p>

@@ -98,7 +98,7 @@ const Sidebar = () => {
                         <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <BookOpen size={18} color="white" />
                         </div>
-                        <span className="gradient-text" style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.02em' }}>StudyTrack</span>
+                        <span className="gradient-text" style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.02em' }}>Studivexa</span>
                     </Link>
                 )}
                 <button onClick={() => setCollapsed(!collapsed)} style={{

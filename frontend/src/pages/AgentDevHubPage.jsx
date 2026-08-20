@@ -90,7 +90,7 @@ const AgentDevHubPage = () => {
     return (
         <div className="page-container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 80px)' }}>
             <Helmet>
-                <title>Agentic DevHub | StudyTrack</title>
+                <title>Agentic DevHub | Studivexa</title>
             </Helmet>
 
             <header style={{ marginBottom: '2rem' }}>

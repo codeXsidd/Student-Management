@@ -1,4 +1,4 @@
-# StudyTrack - Premium AI-Powered Student Productivity Workspace 🚀
+# Studivexa - Premium AI-Powered Student Productivity Workspace 🚀
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![React](https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)
@@ -12,10 +12,10 @@
 
 ---
 
-StudyTrack is an all-in-one, ultra-premium personal student workspace designed to transform academic chaos into peak productivity. Powered by **Google Gemini AI**, it goes beyond simple tracking—it acts as your personal tutor, scheduler, and motivator.
+Studivexa is an all-in-one, ultra-premium personal student workspace designed to transform academic chaos into peak productivity. Powered by **Google Gemini AI**, it goes beyond simple tracking—it acts as your personal tutor, scheduler, and motivator.
 
 ## 🌟 The Vision & Idea
-The core idea behind **StudyTrack** is to create a holistic, intelligent ecosystem that actively helps students beat procrastination, build positive study habits, and understand their learning at a deeper level. Traditional apps just give you a checklist. StudyTrack gives you an AI agent that monitors your success, rewards you for consistency, and intervenes when you fall behind.
+The core idea behind **Studivexa** is to create a holistic, intelligent ecosystem that actively helps students beat procrastination, build positive study habits, and understand their learning at a deeper level. Traditional apps just give you a checklist. Studivexa gives you an AI agent that monitors your success, rewards you for consistency, and intervenes when you fall behind.
 
 ## 💎 Premium Experience
 - **Ultra-Modern UI:** Sleek glassmorphism, fluid animations (Slide-Scale & Fade-Up), and a mobile-first side-swiping UX.

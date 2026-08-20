@@ -165,7 +165,7 @@ const CodeInsightPage = () => {
     return (
         <div className="page-container" style={{ display: 'flex', gap: '1.5rem', height: 'calc(100vh - 100px)', maxWidth: '1600px', margin: '0 auto', overflow: 'hidden', padding: '1rem' }}>
             <Helmet>
-                <title>CodeInsight AI — StudyTrack</title>
+                <title>CodeInsight AI — Studivexa</title>
                 <meta name="description" content="AI-powered code explanations, security auditing, and test generation." />
             </Helmet>
 

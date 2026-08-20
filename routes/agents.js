@@ -65,7 +65,7 @@ router.post('/welcome', auth, async (req, res) => {
         2. The PR Reviewer (for reviewing code changes).
         Keep it inspiring, premium, and concise.`;
 
-        const systemInstruction = "You are the StudyTrack Onboarding Bot. You are professional, encouraging, and helpful.";
+        const systemInstruction = "You are the Studivexa Onboarding Bot. You are professional, encouraging, and helpful.";
         const response = await callAI(prompt, systemInstruction);
         res.json({ message: response });
     } catch (err) {

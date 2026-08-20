@@ -92,7 +92,7 @@ const LoginPage = () => {
         try {
             const res = await registerApi({ ...form, otp });
             login(res.data.user, res.data.token);
-            toast.success(`Welcome to StudyTrack, ${res.data.user.name}! 🚀`);
+            toast.success(`Welcome to Studivexa, ${res.data.user.name}! 🚀`);
             navigate('/');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Registration failed');
@@ -280,7 +280,7 @@ const LoginPage = () => {
                             <BookOpen size={26} color="white" />
                         </div>
                         <div>
-                            <h1 style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0, color: '#fff', letterSpacing: '-0.03em' }}>StudyTrack</h1>
+                            <h1 style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0, color: '#fff', letterSpacing: '-0.03em' }}>Studivexa</h1>
                             <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0, fontWeight: 500 }}>Your personal study companion</p>
                         </div>
                     </div>

@@ -143,7 +143,7 @@ const FocusRoomPage = () => {
     return (
         <div style={{ height: 'calc(100vh - 40px)', margin: '-1.5rem', background: '#050510', position: 'relative', overflow: 'hidden' }}>
             <Helmet>
-                <title>Deep Focus Room — StudyTrack</title>
+                <title>Deep Focus Room — Studivexa</title>
                 <meta name="description" content="Eliminate distractions and achieve flow state with Pomodoro timers and our AI Study Tutor." />
             </Helmet>
             {/* Ambient Background - Lofi video iframe (No controls, looping) */}

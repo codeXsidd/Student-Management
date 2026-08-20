@@ -223,8 +223,8 @@ const DashboardPage = () => {
     return (
         <div className="page-container animate-slide-scale">
             <Helmet>
-                <title>Dashboard — StudyTrack</title>
-                <meta name="description" content="View your upcoming classes, deadlines, habits, and study streak on StudyTrack." />
+                <title>Dashboard — Studivexa</title>
+                <meta name="description" content="View your upcoming classes, deadlines, habits, and study streak on Studivexa." />
             </Helmet>
 
             {/* ── HERO HEADER ── */}

@@ -124,7 +124,7 @@ const TimetablePage = () => {
     return (
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem' }}>
             <Helmet>
-                <title>Weekly Timetable — StudyTrack</title>
+                <title>Weekly Timetable — Studivexa</title>
                 <meta name="description" content="Organize your weekly schedule, set study periods, and let AI optimize your timetable." />
             </Helmet>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>

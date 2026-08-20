@@ -114,7 +114,7 @@ ${cardData.badgeEmoji} Badge Earned: ${cardData.badge}
 
 ${cardData.tagline}
 
-Track your studies → StudyTrack App 🚀`;
+Track your studies → Studivexa App 🚀`;
         navigator.clipboard.writeText(text);
         toast.success('Share text copied to clipboard!');
     };
@@ -283,7 +283,7 @@ Track your studies → StudyTrack App 🚀`;
                                             <div style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <BookOpen size={14} color="white" />
                                             </div>
-                                            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>StudyTrack</span>
+                                            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>Studivexa</span>
                                         </div>
                                         <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: 600 }}>{today}</span>
                                     </div>
