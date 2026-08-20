@@ -202,7 +202,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
         await user.save();
 
         // In production: send email. For now, return the reset link directly.
-        const resetUrl = `https://studytrack-hub.vercel.app/reset-password/${resetToken}`;
+        const resetUrl = `https://studivexa.vercel.app/reset-password/${resetToken}`;
 
         try {
             if (!process.env.BREVO_API_KEY) {

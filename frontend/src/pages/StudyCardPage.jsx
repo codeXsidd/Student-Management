@@ -94,7 +94,7 @@ const StudyCardPage = () => {
                 logging: false,
             });
             const link = document.createElement('a');
-            link.download = `studytrack-card-${subject.replace(/\s+/g, '-').toLowerCase()}.png`;
+            link.download = `studivexa-card-${subject.replace(/\s+/g, '-').toLowerCase()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
             toast.success('Card downloaded! 🎉');

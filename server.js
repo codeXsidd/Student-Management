@@ -22,7 +22,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5174',
   'http://localhost:3000',
   'https://smartstudy-hub.vercel.app',
-  'https://studytrack-hub.vercel.app'
+  'https://studivexa.vercel.app'
 ];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(helmet());
