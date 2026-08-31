@@ -13,6 +13,7 @@ dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
+app.set('trust proxy', 1);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
